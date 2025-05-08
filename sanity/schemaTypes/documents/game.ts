@@ -85,43 +85,51 @@ export default defineType({
       description: 'ID of the winning player',
     }),
     defineField({
-      name: 'moves',
-      title: 'Game Moves',
-      type: 'array',
-      of: [
-        {
-          type: 'object',
-          name: 'gameMove',
-          fields: [
-            {
-              name: 'playerId',
-              title: 'Player ID',
-              type: 'string',
-              validation: (Rule) => Rule.required(),
+        name: 'moves',
+        title: 'Game Moves',
+        type: 'array',
+        of: [{ type: 'gameMove' }],
+      }),
+      defineField({
+        name: 'chat',
+        title: 'Game Chat',
+        type: 'array',
+        of: [
+          {
+            type: 'object',
+            name: 'chatMessage',
+            fields: [
+              {
+                name: 'senderId',
+                title: 'Sender ID',
+                type: 'string',
+              },
+              {
+                name: 'senderName',
+                title: 'Sender Name',
+                type: 'string',
+              },
+              {
+                name: 'message',
+                title: 'Message',
+                type: 'text',
+              },
+              {
+                name: 'timestamp',
+                title: 'Timestamp',
+                type: 'datetime',
+              },
+            ],
+            preview: {
+              select: {
+                title: 'message',
+                subtitle: 'senderName',
+              },
             },
-            {
-              name: 'questionId',
-              title: 'Question ID',
-              type: 'string',
-              validation: (Rule) => Rule.required(),
-            },
-            {
-              name: 'timestamp',
-              title: 'Timestamp',
-              type: 'datetime',
-              validation: (Rule) => Rule.required(),
-            },
-            {
-              name: 'answer',
-              title: 'Answer',
-              type: 'boolean',
-              validation: (Rule) => Rule.required(),
-            },
-          ],
-        },
-      ],
-    }),
-  ],
+          },
+        ],
+      }),
+    ],
   preview: {
     select: {
       playerOne: 'playerOne.name',
