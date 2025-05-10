@@ -101,7 +101,7 @@ export default function Dashboard() {
                 </div>
                 
                 <button
-                  onClick={() => router.push(`/game/${game._id}`)}
+                  onClick={() => router.push(`/games/${game._id}`)}
                   className={`w-full py-2 rounded text-center transition-colors ${
                     game.status === 'active'
                       ? game.currentTurn === userId
