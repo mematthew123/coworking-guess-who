@@ -43,78 +43,42 @@ export default function CreateGame() {
     fetchMembers();
   }, [currentUserId]);
   
-  async function createGame() {
-    if (!selectedOpponentId) {
-      setError('Please select an opponent');
-      return;
+ async function createGame() {
+  if (!selectedOpponentId) {
+    setError('Please select an opponent');
+    return;
+  }
+  
+  try {
+    setCreating(true);
+    setError(null);
+    
+    // Call our server API route instead of Sanity directly
+    const response = await fetch('/api/game', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        opponentId: selectedOpponentId,
+        // You can optionally provide board members if you want more control
+        // boardMembers: customBoardMembers
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || errorData.details || 'Failed to create game');
     }
     
-    try {
-      setCreating(true);
-      setError(null);
-      
-      // Get all participating members for the board (including current user and opponent)
-      const allParticipatingMembers = await client.fetch<string[]>(`
-        *[_type == "member" && gameParticipation == true]._id
-      `);
-      
-      // Randomly select 16-20 members for the board (must include both players)
-      const numBoardMembers = Math.floor(Math.random() * 5) + 16; // 16-20 members
-      const shuffledMembers = [...allParticipatingMembers].sort(() => 0.5 - Math.random());
-      
-      // Ensure both players are included in the board
-      const boardMemberIds = shuffledMembers.slice(0, numBoardMembers);
-      if (!boardMemberIds.includes(currentUserId)) {
-        boardMemberIds.pop();
-        boardMemberIds.push(currentUserId);
-      }
-      if (!boardMemberIds.includes(selectedOpponentId)) {
-        boardMemberIds.pop();
-        boardMemberIds.push(selectedOpponentId);
-      }
-      
-      // Create a board with references
-      const boardMembers = boardMemberIds.map(id => ({
-        _key: id,
-        _ref: id,
-        _type: 'reference'
-      }));
-      
-      // Create the game
-      const result = await client.create({
-        _type: 'game',
-        startedAt: new Date().toISOString(),
-        status: 'active',
-        playerOne: {
-          _type: 'reference',
-          _ref: currentUserId
-        },
-        playerTwo: {
-          _type: 'reference',
-          _ref: selectedOpponentId
-        },
-        // Each player is trying to guess their opponent
-        playerOneTarget: {
-          _type: 'reference',
-          _ref: selectedOpponentId
-        },
-        playerTwoTarget: {
-          _type: 'reference',
-          _ref: currentUserId
-        },
-        boardMembers: boardMembers,
-        currentTurn: currentUserId, // Current user goes first
-        moves: []
-      });
-      
-      // Navigate to the new game
-      router.push(`/games/${result._id}`);
-    } catch (error) {
-      console.error('Error creating game:', error);
-      setError('Failed to create the game. Please try again.');
-      setCreating(false);
-    }
+    const result = await response.json();
+    
+    // Navigate to the new game
+    router.push(`/games/${result._id}`);
+  } catch (error) {
+    console.error('Error creating game:', error);
+    setError(error instanceof Error ? error.message : 'Failed to create the game. Please try again.');
+    setCreating(false);
   }
+}
   
   return (
     <div className="container mx-auto p-4 max-w-3xl">
