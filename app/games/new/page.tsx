@@ -54,7 +54,7 @@ export default function CreateGame() {
     setError(null);
     
     // Call our server API route instead of Sanity directly
-    const response = await fetch('/api/game', {
+    const response = await fetch('/api/games', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

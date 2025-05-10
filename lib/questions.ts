@@ -1,5 +1,3 @@
-// src/lib/game-logic/questions.ts
-
 import { Member, Question, QuestionCategory } from "@/sanity.types";
 
 /**
@@ -74,3 +72,5 @@ export function parseQuestionId(questionId: string): { categoryId: string; quest
     questionIndex: parseInt(indexStr, 10),
   };
 }
+
+
