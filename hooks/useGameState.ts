@@ -7,6 +7,7 @@ import {
   ExpandedQuestionCategory,
   getNestedProperty 
 } from '@/types/groqResults';
+import { useUser } from '@clerk/nextjs';
 
 function resolveQuestionAnswer(question: Question, member: ExpandedMember): boolean {
   const { attributePath, attributeValue } = question;
@@ -40,7 +41,7 @@ function parseQuestionId(questionId: string): { categoryId: string; questionInde
   };
 }
 
-export default function useGameState(gameId: string, playerId: string) {
+export default function useGameState(gameId: string) {
   const [game, setGame] = useState<ExpandedGame | null>(null);
   const [boardMembers, setBoardMembers] = useState<ExpandedMember[]>([]);
   const [eliminatedIds, setEliminatedIds] = useState<string[]>([]);
@@ -48,6 +49,8 @@ export default function useGameState(gameId: string, playerId: string) {
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+    const { user } = useUser();
+  const playerId = user?.id;
 
   // Fetch initial game state
   useEffect(() => {
@@ -80,7 +83,7 @@ export default function useGameState(gameId: string, playerId: string) {
         // Set board members
         setBoardMembers(gameData.boardMembers || []);
         
-        setIsMyTurn(gameData.currentTurn === playerId);
+        setIsMyTurn(gameData.currentTurn === (playerId ?? ''));
         
         // Fetch question categories
         const categories = await client.fetch<ExpandedQuestionCategory[]>(`
@@ -98,7 +101,7 @@ export default function useGameState(gameId: string, playerId: string) {
             gameData.moves,
             gameData.boardMembers,
             categories,
-            playerId
+            playerId ?? ''
           );
           setEliminatedIds(eliminated);
         }
@@ -280,6 +283,7 @@ export default function useGameState(gameId: string, playerId: string) {
     game,
     boardMembers,
     eliminatedIds,
+    setEliminatedIds,
     questionCategories,
     isMyTurn,
     loading,

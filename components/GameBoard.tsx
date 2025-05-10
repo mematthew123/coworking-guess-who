@@ -1,10 +1,10 @@
 import React from 'react';
 import Image from 'next/image';
-import { Member } from '@/sanity.types';
 import { urlFor } from '@/sanity/lib/image';
+import { ExpandedMember } from '@/types/groqResults';
 
 interface GameBoardProps {
-  members: Member[];
+  members: ExpandedMember[];
   eliminatedIds: string[];
   onToggleMember: (id: string) => void;
   readonly?: boolean;
