@@ -4,7 +4,6 @@ import { client } from '@/sanity/lib/client';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -15,7 +14,8 @@ export async function POST(
       );
     }
     
-    const gameId = params.id;
+    const url = new URL(request.url);
+    const gameId = url.pathname.split('/').pop();
     if (!gameId) {
       return new NextResponse(
         JSON.stringify({ error: 'Game ID is required' }),
