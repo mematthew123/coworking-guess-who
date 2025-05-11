@@ -1,8 +1,8 @@
-// src/app/games/new/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 import { ExpandedMember } from '@/types/groqResults';
 import { client } from '@/sanity/lib/client';
 import { urlFor } from '@/sanity/lib/image';
@@ -10,75 +10,95 @@ import Image from 'next/image';
 
 export default function CreateGame() {
   const router = useRouter();
+  const { user, isLoaded } = useUser();
+  const [sanityUserId, setSanityUserId] = useState<string | null>(null);
   const [members, setMembers] = useState<ExpandedMember[]>([]);
   const [selectedOpponentId, setSelectedOpponentId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const currentUserId = "current-user-id"; // Replace with your auth logic
-  
+  // Step 1: Get the Sanity user ID for the current user
   useEffect(() => {
-    async function fetchMembers() {
+    async function fetchUserProfile() {
+      if (!isLoaded || !user) return;
+      
       try {
         setLoading(true);
-        const coworkingMembers = await client.fetch<ExpandedMember[]>(`
-          *[_type == "member" && gameParticipation == true && _id != $currentUserId] {
-            _id,
-            name,
-            profession,
-            image
-          } | order(name asc)
-        `, { currentUserId });
         
-        setMembers(coworkingMembers || []);
+        // Get the Sanity member ID for the current Clerk user
+        const memberDoc = await client.fetch(
+          `*[_type == "member" && clerkId == $clerkId][0]`,
+          { clerkId: user.id }
+        );
+        
+        if (memberDoc) {
+          setSanityUserId(memberDoc._id);
+          
+          // Now fetch other members for opponent selection
+          const coworkingMembers = await client.fetch<ExpandedMember[]>(`
+            *[_type == "member" && gameParticipation == true && _id != $currentUserId] {
+              _id,
+              name,
+              profession,
+              image
+            } | order(name asc)
+          `, { currentUserId: memberDoc._id });
+          
+          setMembers(coworkingMembers || []);
+        } else {
+          // No profile found
+          setError('You need to complete your profile before creating a game');
+        }
+        
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching members:', error);
+        console.error('Error fetching user profile:', error);
         setLoading(false);
-        setError('Failed to load members');
+        setError('Failed to load your profile');
       }
     }
     
-    fetchMembers();
-  }, [currentUserId]);
+    fetchUserProfile();
+  }, [isLoaded, user]);
   
- async function createGame() {
-  if (!selectedOpponentId) {
-    setError('Please select an opponent');
-    return;
-  }
-  
-  try {
-    setCreating(true);
-    setError(null);
-    
-    // Call our server API route instead of Sanity directly
-    const response = await fetch('/api/games', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        opponentId: selectedOpponentId,
-        // You can optionally provide board members if you want more control
-        // boardMembers: customBoardMembers
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || errorData.details || 'Failed to create game');
+
+
+  async function createGame() {
+    if (!selectedOpponentId || !sanityUserId) {
+      setError('Please select an opponent');                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+      return;
     }
     
-    const result = await response.json();
-    
-    // Navigate to the new game
-    router.push(`/games/${result._id}`);
-  } catch (error) {
-    console.error('Error creating game:', error);
-    setError(error instanceof Error ? error.message : 'Failed to create the game. Please try again.');
-    setCreating(false);
+    try {
+      setCreating(true);
+      setError(null);
+      
+      // Include the sanityUserId in the request
+      const response = await fetch('/api/games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          opponentId: selectedOpponentId,
+          sanityUserId: sanityUserId // <-- Add this
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.details || 'Failed to create game');
+      }
+      
+      const result = await response.json();
+      
+      // Navigate to the new game
+      router.push(`/games/${result._id}`);
+    } catch (error) {
+      console.error('Error creating game:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create the game. Please try again.');
+      setCreating(false);
+    }
   }
-}
   
   return (
     <div className="container mx-auto p-4 max-w-3xl">

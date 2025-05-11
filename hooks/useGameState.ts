@@ -82,8 +82,10 @@ export default function useGameState(gameId: string) {
         
         // Set board members
         setBoardMembers(gameData.boardMembers || []);
-        
-        setIsMyTurn(gameData.currentTurn === (playerId ?? ''));
+        const isYourTurn = String(playerId) === String(gameData.currentTurn);
+      console.log('Is your turn (fixed)?', isYourTurn);
+      
+      setIsMyTurn(isYourTurn);
         
         // Fetch question categories
         const categories = await client.fetch<ExpandedQuestionCategory[]>(`
@@ -118,8 +120,12 @@ export default function useGameState(gameId: string) {
   }, [gameId, playerId]);
 
   // Function to ask a question
-  const askQuestion = async (categoryId: string, questionIndex: number) => {
-    if (!game || !isMyTurn) return;
+const askQuestion = async (categoryId: string, questionIndex: number) => {
+  // Force string comparison here too
+  if (!game || String(playerId) !== String(game.currentTurn)) {
+    console.log('Not your turn:', playerId, game?.currentTurn);
+    return;
+  }
     
     try {
       const category = questionCategories.find(c => c._id === categoryId);
@@ -233,7 +239,11 @@ export default function useGameState(gameId: string) {
 
   // Make a guess
   const makeGuess = async (memberId: string) => {
-    if (!game || !isMyTurn) return;
+  // Force string comparison here too
+  if (!game || String(playerId) !== String(game.currentTurn)) {
+    console.log('Not your turn:', playerId, game?.currentTurn);
+    return;
+  }
     
     try {
       const playerOneId = game.playerOne._id;
