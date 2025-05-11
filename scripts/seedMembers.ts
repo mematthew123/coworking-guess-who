@@ -9,7 +9,7 @@ const client = createClient({
     projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '0e1e02q1',
     dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
     apiVersion: '2023-05-03',
-    token: 'skZLgWh0JxZGU5iK5V66BvxsOrcd3FXQymTQYmpaeNC6sBKU19Kd3Qq5LMahhLEOqodRLbxVLV03Xg2KIoHJxAFdRlF3zAPcZaTC762h1xjd7ECqZhLPWuAz7aIqoOVdPlzsIZpNZQId1vt81g5YcHLxUG0stRUhC5UkhWgGQR93ckvDgltf',
+    token: process.env.SANITY_API_TOKEN, // This token is only available server-side
     useCdn: false,
 });
 

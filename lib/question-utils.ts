@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Question } from '@/../../sanity.types';
 import { ExpandedMember, ExpandedQuestionCategory } from '../types/groqResults';
 
