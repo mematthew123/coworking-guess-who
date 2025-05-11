@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,6 +10,7 @@ import GameBoard from '@/components/GameBoard';
 import QuestionSelector from '@/components/QuestionSelector';
 import GameHistoryPanel from '@/components/GameHistoryPanel';
 import RealtimeIndicator from '@/components/RealtimeIndicator';
+import { ExpandedGame } from '@/types/groqResults';
 
 export default function GamePage() {
     const { id } = useParams() as { id: string };
@@ -17,6 +19,110 @@ export default function GamePage() {
     const [sanityUserId, setSanityUserId] = useState<string | null>(null);
     const [initialLoading, setInitialLoading] = useState(true);
     const [guessMode, setGuessMode] = useState(false);
+    const [pollingActive, setPollingActive] = useState(true);
+    
+    // Step 1: Get the Sanity user ID that corresponds to the Clerk ID
+    useEffect(() => {
+        async function fetchSanityUserId() {
+            if (!user) return;
+
+            try {
+                const member = await client.fetch(
+                    `*[_type == "member" && clerkId == $clerkId][0]._id`,
+                    { clerkId: user.id },
+                );
+
+                if (member) {
+                    setSanityUserId(member);
+                }
+                setInitialLoading(false);
+            } catch (error) {
+                console.error('Error fetching Sanity user ID:', error);
+                setInitialLoading(false);
+            }
+        }
+
+        if (isLoaded) {
+            fetchSanityUserId();
+        }
+    }, [isLoaded, user]);
+
+    // Step 2: Use our game state hook once we have the Sanity user ID
+    const {
+        game,
+        boardMembers,
+        eliminatedIds,
+        setEliminatedIds,
+        questionCategories,
+        isMyTurn,
+        loading: gameLoading,
+        error,
+        askQuestion,
+        makeGuess,
+    } = useGameState(id as string);
+
+    // Step 3: Set up polling for real-time updates
+    useEffect(() => {
+        if (!id || !game) return;
+
+        let mounted = true;
+        const POLL_INTERVAL = 5000; // 5 seconds
+
+        async function pollForUpdates() {
+            try {
+                // Only poll if we're not the current player
+                if (!isMyTurn) {
+                    const updatedGame = await client.fetch<ExpandedGame>(`
+                        *[_type == "game" && _id == $gameId][0]{
+                            ...,
+                            _updatedAt,
+                            currentTurn,
+                            status,
+                            winner,
+                            playerOne->{_id, name},
+                            playerTwo->{_id, name},
+                            moves[]
+                        }
+                    `, { gameId: id });
+
+                    if (mounted && updatedGame) {
+                        // Check if it's now our turn
+                        if (updatedGame.currentTurn === sanityUserId && !isMyTurn) {
+                            // It's now our turn! Reload the page
+                            window.location.reload();
+                            
+                            // Try to play a notification sound
+                            try {
+                                const audio = new Audio('/ding.mp3');
+                                audio.play();
+                            } catch (e) {
+                                console.log('Could not play notification sound');
+                            }
+                        }
+                        
+                        // Check if game status changed
+                        if (game && updatedGame.status !== game.status) {
+                            window.location.reload();
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Error polling for updates:', err);
+                if (mounted) {
+                    setPollingActive(false);
+                }
+            }
+        }
+
+        // Set up polling interval
+        const interval = setInterval(pollForUpdates, POLL_INTERVAL);
+
+        // Clean up on unmount
+        return () => {
+            mounted = false;
+            clearInterval(interval);
+        };
+    }, [id, game, isMyTurn, sanityUserId]);
 
     async function takeTurn() {
         if (!game || !sanityUserId) return;
@@ -56,45 +162,6 @@ export default function GamePage() {
         );
     };
 
-    // Step 1: Get the Sanity user ID that corresponds to the Clerk ID
-    useEffect(() => {
-        async function fetchSanityUserId() {
-            if (!user) return;
-
-            try {
-                const member = await client.fetch(
-                    `*[_type == "member" && clerkId == $clerkId][0]._id`,
-                    { clerkId: user.id },
-                );
-
-                if (member) {
-                    setSanityUserId(member);
-                }
-                setInitialLoading(false);
-            } catch (error) {
-                console.error('Error fetching Sanity user ID:', error);
-                setInitialLoading(false);
-            }
-        }
-
-        if (isLoaded) {
-            fetchSanityUserId();
-        }
-    }, [isLoaded, user]);
-
-    // Step 2: Use our game state hook once we have the Sanity user ID
-    const {
-        game,
-        boardMembers,
-        eliminatedIds,
-        setEliminatedIds, // Add this line
-        questionCategories,
-        isMyTurn,
-        loading: gameLoading,
-        error,
-        askQuestion,
-        makeGuess,
-    } = useGameState(id as string);
     const handleToggleMember = async (memberId: string) => {
         if (!isMyTurn) return;
 
@@ -122,8 +189,15 @@ export default function GamePage() {
         }
     };
 
-    const handleAskQuestion = (categoryId: string, questionIndex: number) => {
-        askQuestion(categoryId, questionIndex);
+    const handleAskQuestion = async (categoryId: string, questionIndex: number) => {
+        try {
+            await askQuestion(categoryId, questionIndex);
+            // If successful, wait a second and reload the page to reflect changes
+            setTimeout(() => window.location.reload(), 1000);
+        } catch (error) {
+            console.error('Error asking question:', error);
+            alert('There was an error asking the question. Please try again.');
+        }
     };
 
     // Handle loading states
@@ -217,6 +291,7 @@ export default function GamePage() {
                 <RealtimeIndicator
                     lastUpdated={game._updatedAt}
                     isMyTurn={isMyTurn}
+                    isRealTimeActive={pollingActive}
                 />
             </div>
 
@@ -258,7 +333,7 @@ export default function GamePage() {
                             members={boardMembers}
                             eliminatedIds={eliminatedIds}
                             onToggleMember={handleToggleMember}
-                            readonly={!isMyTurn && !guessMode}
+                            readonly={!isMyTurn || (isMyTurn && !guessMode)}
                         />
                     </div>
                 </div>
@@ -273,8 +348,6 @@ export default function GamePage() {
                             disabled={!isMyTurn || guessMode}
                         />
                     )}
-
-                    {/* Game History */}
 
                     {/* Game Controls */}
                     <div className='space-y-6'>
@@ -293,10 +366,14 @@ export default function GamePage() {
                                 </div>
                             ) : (
                                 // Normal question mode
-                                <QuestionSelector
-                                    categories={questionCategories}
-                                    onSelectQuestion={handleAskQuestion}
-                                />
+                                <div className='bg-white rounded-lg shadow-md p-4'>
+                                    <h3 className='text-xl font-bold text-gray-800 mb-4'>
+                                        Ask a Question
+                                    </h3>
+                                    <p className='text-gray-600 mb-2'>
+                                        Select a question category above to ask your opponent.
+                                    </p>
+                                </div>
                             )
                         ) : (
                             // When it's NOT your turn
@@ -307,6 +384,9 @@ export default function GamePage() {
                                 <p className='text-gray-600'>
                                     Waiting for your opponent to make their
                                     move...
+                                </p>
+                                <p className='text-gray-500 text-sm mt-2'>
+                                    The page will automatically refresh when it&apos;s your turn.
                                 </p>
                             </div>
                         )}
@@ -323,58 +403,65 @@ export default function GamePage() {
                             <h3 className='text-xl font-bold text-gray-800 mb-2'>
                                 Game Status
                             </h3>
-                            {/* Status content */}
-                        </div>
-                    </div>
-
-                    {/* Game Status */}
-                    <div className='bg-white rounded-lg shadow-md p-4'>
-                        <h3 className='text-xl font-bold text-gray-800 mb-2'>
-                            Game Status
-                        </h3>
-                        <div className='space-y-2'>
-                            <div className='flex justify-between'>
-                                <span className='text-gray-600'>Status:</span>
-                                <span
-                                    className={`font-medium ${
-                                        game.status === 'active'
-                                            ? 'text-green-600'
-                                            : game.status === 'completed'
-                                              ? 'text-blue-600'
-                                              : 'text-yellow-600'
-                                    }`}
-                                >
-                                    {game.status === 'active'
-                                        ? 'In Progress'
-                                        : game.status === 'completed'
-                                          ? 'Completed'
-                                          : 'Abandoned'}
-                                </span>
-                            </div>
-
-                            <div className='flex justify-between'>
-                                <span className='text-gray-600'>Started:</span>
-                                <span className='font-medium'>
-                                    {game.startedAt
-                                        ? new Date(
-                                              game.startedAt,
-                                          ).toLocaleString()
-                                        : 'Unknown'}
-                                </span>
-                            </div>
-
-                            {game.endedAt && (
+                            <div className='space-y-2'>
                                 <div className='flex justify-between'>
-                                    <span className='text-gray-600'>
-                                        Ended:
-                                    </span>
-                                    <span className='font-medium'>
-                                        {new Date(
-                                            game.endedAt,
-                                        ).toLocaleString()}
+                                    <span className='text-gray-600'>Status:</span>
+                                    <span
+                                        className={`font-medium ${
+                                            game.status === 'active'
+                                                ? 'text-green-600'
+                                                : game.status === 'completed'
+                                                  ? 'text-blue-600'
+                                                  : 'text-yellow-600'
+                                        }`}
+                                    >
+                                        {game.status === 'active'
+                                            ? 'In Progress'
+                                            : game.status === 'completed'
+                                              ? 'Completed'
+                                              : 'Abandoned'}
                                     </span>
                                 </div>
-                            )}
+
+                                <div className='flex justify-between'>
+                                    <span className='text-gray-600'>Started:</span>
+                                    <span className='font-medium'>
+                                        {game.startedAt
+                                            ? new Date(
+                                                  game.startedAt,
+                                              ).toLocaleString()
+                                            : 'Unknown'}
+                                    </span>
+                                </div>
+
+                                {game.endedAt && (
+                                    <div className='flex justify-between'>
+                                        <span className='text-gray-600'>
+                                            Ended:
+                                        </span>
+                                        <span className='font-medium'>
+                                            {new Date(
+                                                game.endedAt,
+                                            ).toLocaleString()}
+                                        </span>
+                                    </div>
+                                )}
+                                
+                                {game.winner && (
+                                    <div className='flex justify-between'>
+                                        <span className='text-gray-600'>
+                                            Winner:
+                                        </span>
+                                        <span className='font-medium text-blue-600'>
+                                            {game.winner === sanityUserId 
+                                                ? 'You!' 
+                                                : game.winner === game.playerOne._id 
+                                                    ? game.playerOne.name
+                                                    : game.playerTwo.name}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
