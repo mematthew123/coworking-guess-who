@@ -25,7 +25,7 @@ export default function GameBoard({
           className={`relative rounded-lg overflow-hidden transition-all ${
             readonly ? '' : 'cursor-pointer hover:shadow-lg transform hover:-translate-y-1'
           } ${
-            eliminatedIds.includes(member._id) 
+            eliminatedIds.includes(member?._id) 
               ? 'opacity-40 grayscale' 
               : ''
           }`}
