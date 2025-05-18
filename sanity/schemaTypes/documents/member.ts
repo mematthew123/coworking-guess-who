@@ -20,6 +20,27 @@ export default defineType({
                 'This will be used for sending notifications and updates and other shit..maybe.',
         }),
         defineField({
+            name: 'lastActive',
+            title: 'Last Active',
+            type: 'datetime',
+            description: 'When the user was last active',
+            hidden: true,
+        }),
+        defineField({
+            name: 'onlineStatus',
+            title: 'Online Status',
+            type: 'string',
+            options: {
+                list: [
+                    { title: 'Online', value: 'online' },
+                    { title: 'Away', value: 'away' },
+                    { title: 'Offline', value: 'offline' },
+                ],
+            },
+            initialValue: 'offline',
+            hidden: true,
+        }),
+        defineField({
             name: 'image',
             title: 'Profile Photo',
             type: 'image',
@@ -34,7 +55,7 @@ export default defineType({
             description: 'ID from Clerk authentication service',
             // Make this hidden in Studio if desired
             hidden: false,
-            readOnly:true
+            readOnly: true,
         }),
         defineField({
             name: 'profession',
