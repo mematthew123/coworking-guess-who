@@ -1,4 +1,4 @@
-// app/games/setup/[invitationId]/page.tsx
+;
 import CharacterSelectionClient from '@/components/CharacterSelectionClient';
 import { SanityLive } from '@/sanity/lib/live';
 
