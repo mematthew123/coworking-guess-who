@@ -1,4 +1,3 @@
-// app/api/games/create-from-invitation/route.ts
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { client } from '@/sanity/lib/client';
@@ -9,7 +8,7 @@ export async function POST(request: Request) {
     const authResult = await auth();
     const userId = authResult?.userId;
     
-    console.log("Auth check - userId:", userId); // Debug logging
+    console.log("Auth check - userId:", userId);
     
     if (!userId) {
       console.error("Authentication failed - no userId found");
@@ -41,9 +40,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
     }
     
-    // Get the invitation with character selections
+    // Add a small delay to ensure the character selection has been saved
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Get the invitation with character selections (fetch fresh data)
     const invitation = await client.fetch(`
       *[_type == "gameInvitation" && _id == $invitationId][0]{
+        _id,
         from->{_id},
         to->{_id},
         fromCharacterId,
@@ -51,6 +54,8 @@ export async function POST(request: Request) {
         status
       }
     `, { invitationId });
+    
+    console.log('Fetched invitation:', invitation);
     
     if (!invitation) {
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
@@ -65,10 +70,52 @@ export async function POST(request: Request) {
     
     // Verify that both players have selected characters
     if (!invitation.fromCharacterId || !invitation.toCharacterId) {
-      return NextResponse.json({ error: 'Both players must select characters' }, { status: 400 });
+      console.error('Missing character selections:', {
+        fromCharacterId: invitation.fromCharacterId,
+        toCharacterId: invitation.toCharacterId
+      });
+      
+      // Re-fetch to ensure we have the latest data
+      const updatedInvitation = await client.fetch(`
+        *[_type == "gameInvitation" && _id == $invitationId][0]{
+          fromCharacterId,
+          toCharacterId
+        }
+      `, { invitationId });
+      
+      console.log('Re-fetched invitation:', updatedInvitation);
+      
+      if (!updatedInvitation?.fromCharacterId || !updatedInvitation?.toCharacterId) {
+        return NextResponse.json({ 
+          error: 'Both players must select characters',
+          details: {
+            fromCharacterSelected: !!updatedInvitation?.fromCharacterId,
+            toCharacterSelected: !!updatedInvitation?.toCharacterId
+          }
+        }, { status: 400 });
+      }
+      
+      // Update the invitation object with the latest data
+      invitation.fromCharacterId = updatedInvitation.fromCharacterId;
+      invitation.toCharacterId = updatedInvitation.toCharacterId;
     }
     
-      
+    // Check if game already exists for this invitation
+    const existingGame = await client.fetch(`
+      *[_type == "game" && 
+        playerOne._ref == $playerOneId && 
+        playerTwo._ref == $playerTwoId && 
+        status == "active"][0]._id
+    `, {
+      playerOneId: invitation.from._id,
+      playerTwoId: invitation.to._id
+    });
+    
+    if (existingGame) {
+      console.log('Game already exists:', existingGame);
+      return NextResponse.json({ gameId: existingGame });
+    }
+    
     // Create board members from all participating members
     const allParticipatingMembers = await client.fetch(`
       *[_type == "member" && gameParticipation == true]._id
@@ -77,15 +124,19 @@ export async function POST(request: Request) {
     // Shuffle and select a subset for the board (16-20 members)
     const shuffledMembers = [...allParticipatingMembers].sort(() => 0.5 - Math.random());
     const boardSize = Math.min(Math.floor(Math.random() * 5) + 16, shuffledMembers.length);
-    const boardMemberIds = shuffledMembers.slice(0, boardSize);
+    let boardMemberIds = shuffledMembers.slice(0, boardSize);
     
     // Ensure both players' selected characters are in the board
     if (!boardMemberIds.includes(invitation.fromCharacterId)) {
-      boardMemberIds[Math.floor(Math.random() * boardMemberIds.length)] = invitation.fromCharacterId;
+      boardMemberIds = boardMemberIds.slice(0, -1);
+      boardMemberIds.push(invitation.fromCharacterId);
     }
     if (!boardMemberIds.includes(invitation.toCharacterId)) {
-      boardMemberIds[Math.floor(Math.random() * boardMemberIds.length)] = invitation.toCharacterId;
+      boardMemberIds = boardMemberIds.slice(0, -1);
+      boardMemberIds.push(invitation.toCharacterId);
     }
+    
+    console.log('Creating game with board members:', boardMemberIds.length);
     
     // Create the game
     const game = await client.create({
@@ -105,6 +156,8 @@ export async function POST(request: Request) {
       moves: []
     });
     
+    console.log('Game created:', game._id);
+    
     // Update invitation with game ID and mark as completed
     await client
       .patch(invitationId)
@@ -114,7 +167,7 @@ export async function POST(request: Request) {
       })
       .commit();
     
-    return NextResponse.json({ gameId: "success" });
+    return NextResponse.json({ gameId: game._id });
   } catch (error) {
     console.error('Error in create-from-invitation:', error);
     return NextResponse.json({ 

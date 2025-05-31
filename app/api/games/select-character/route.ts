@@ -18,6 +18,8 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
     
+    console.log('Selecting character:', { invitationId, characterId });
+    
     // Get user's Sanity ID
     const currentUser = await client.fetch(
       `*[_type == "member" && clerkId == $clerkId][0]._id`,
@@ -43,6 +45,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
     }
     
+    console.log('Current invitation state:', invitation);
+    
     // Check invitation status
     if (invitation.status !== 'accepted' && invitation.status !== 'pending') {
       return NextResponse.json({ 
@@ -61,14 +65,23 @@ export async function POST(request: Request) {
     }
     
     // Update the character selection based on which user is making the request
-    await client
+    const fieldToUpdate = isFromUser ? 'fromCharacterId' : 'toCharacterId';
+    
+    console.log('Updating field:', fieldToUpdate, 'with character:', characterId);
+    
+    const updateResult = await client
       .patch(invitationId)
       .set({
-        [isFromUser ? 'fromCharacterId' : 'toCharacterId']: characterId
+        [fieldToUpdate]: characterId
       })
       .commit();
     
-    // Check if both players have selected characters
+    console.log('Update result:', updateResult);
+    
+    // Wait a moment to ensure the update is propagated
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Re-fetch to get the updated invitation
     const updatedInvitation = await client.fetch(`
       *[_type == "gameInvitation" && _id == $invitationId][0]{
         fromCharacterId,
@@ -76,14 +89,19 @@ export async function POST(request: Request) {
       }
     `, { invitationId });
     
+    console.log('Updated invitation after selection:', updatedInvitation);
+    
     const bothPlayersReady = 
-      updatedInvitation.fromCharacterId && 
-      updatedInvitation.toCharacterId;
+      !!updatedInvitation.fromCharacterId && 
+      !!updatedInvitation.toCharacterId;
+    
+    console.log('Both players ready:', bothPlayersReady);
     
     return NextResponse.json({ 
       success: true, 
       characterId,
-      bothPlayersReady
+      bothPlayersReady,
+      invitation: updatedInvitation
     });
   } catch (error) {
     console.error('Error selecting character:', error);
