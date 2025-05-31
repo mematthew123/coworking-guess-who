@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/presence/update",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

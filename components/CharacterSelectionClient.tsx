@@ -7,7 +7,6 @@ import { useUser } from '@clerk/nextjs';
 import { client } from '@/sanity/lib/client';
 import Image from 'next/image';
 import { urlFor } from '@/sanity/lib/image';
-import { sanityFetch } from '@/sanity/lib/live'; // Import sanityFetch for live updates
 
 export default function CharacterSelectionClient({
     invitationId,
@@ -20,8 +19,6 @@ export default function CharacterSelectionClient({
         null,
     );
     const [opponentReady, setOpponentReady] = useState(false);
-    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-    const [isFromUser, setIsFromUser] = useState<boolean>(false);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -33,7 +30,6 @@ export default function CharacterSelectionClient({
         async (invitationId: string) => {
             try {
                 setSubmitting(true);
-                console.log("Creating game from invitation:", invitationId);
 
                 const response = await fetch(
                     '/api/games/create-from-invitation',
@@ -46,15 +42,13 @@ export default function CharacterSelectionClient({
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    console.error("Error response:", errorData);
                     throw new Error(errorData.error || 'Failed to create game');
                 }
 
-                const data = await response.json();
-                console.log("Game created successfully:", data);
+                const { gameId } = await response.json();
 
                 // Redirect to the game page
-                router.push(`/games/${data.gameId}`);
+                router.push(`/games/${gameId}`);
             } catch (error) {
                 console.error('Error creating game:', error);
                 setError(
@@ -68,119 +62,114 @@ export default function CharacterSelectionClient({
         [router],
     );
 
-    // Fetch current user's Sanity ID once
+    // Fetch invitation and characters
     useEffect(() => {
-        if (!user?.id) return;
+        if (!user?.id || !invitationId) return;
 
-        async function fetchCurrentUserId() {
+        async function fetchData() {
             try {
-                const userDoc = await client.fetch(
-                    `*[_type == "member" && clerkId == $clerkId][0]{ _id }`,
-                    { clerkId: user?.id }
+                // Get current user's Sanity ID
+                const currentUser = await client.fetch(
+                    `*[_type == "member" && clerkId == $clerkId][0]{ _id, name }`,
+                    { clerkId: user?.id },
                 );
-                
-                if (userDoc) {
-                    setCurrentUserId(userDoc._id);
-                    console.log("Current user Sanity ID:", userDoc._id);
-                }
-            } catch (error) {
-                console.error("Error fetching user ID:", error);
-            }
-        }
 
-        fetchCurrentUserId();
-    }, [user?.id]);
+                // Get invitation details
+                const invitationData = await client.fetch(
+                    `
+          *[_type == "gameInvitation" && _id == $invitationId][0]{
+            _id,
+            status,
+            fromCharacterId,
+            toCharacterId,
+            from->{_id, name},
+            to->{_id, name}
+          }
+        `,
+                    { invitationId },
+                );
 
-    // Use sanityFetch for live updates on the invitation
-    useEffect(() => {
-        if (!invitationId || !currentUserId) return;
-
-        async function fetchInvitationWithLive() {
-            try {
-                // Use sanityFetch for real-time updates
-                const result = await sanityFetch({
-                    query: `*[_type == "gameInvitation" && _id == $invitationId][0]{
-                        _id,
-                        status,
-                        fromCharacterId,
-                        toCharacterId,
-                        gameId,
-                        from->{_id, name},
-                        to->{_id, name}
-                    }`,
-                    params: { invitationId }
-                });
-
-                const invitationData = result.data;
-                console.log("Live invitation data:", invitationData);
-                
                 setInvitation(invitationData);
-                
-                // Determine if current user is the "from" user
-                const fromUser = invitationData.from._id === currentUserId;
-                setIsFromUser(fromUser);
-                
-                // Check if opponent has selected character
-                const opponentCharacterId = fromUser
+
+                // Determine if we're the "from" or "to" user
+                const isFromUser = invitationData.from._id === currentUser._id;
+
+                // Check if opponent has already selected character
+                const opponentCharacterId = isFromUser
                     ? invitationData.toCharacterId
                     : invitationData.fromCharacterId;
                 setOpponentReady(!!opponentCharacterId);
-                
+
+                // Get potential characters
+                const characters = await client.fetch(`
+          *[_type == "member" && gameParticipation == true]{
+            _id, name, profession, image
+          } | order(name asc)
+        `);
+
+                setAvailableCharacters(characters || []);
+
                 // Check if we've already selected a character
-                const ourCharacterId = fromUser
+                const ourCharacterId = isFromUser
                     ? invitationData.fromCharacterId
                     : invitationData.toCharacterId;
-                
                 if (ourCharacterId) {
                     setSelectedCharacter(ourCharacterId);
                 }
-                
-                // If both players have selected characters and the game hasn't been created yet
-                if (invitationData.fromCharacterId && invitationData.toCharacterId 
-                    && invitationData.status === 'accepted' && !invitationData.gameId && !submitting) {
-                    console.log("Both players have selected characters, creating game...");
-                    createGame(invitationId);
-                }
-                
-                // If game was created, redirect to the game
-                if (invitationData.gameId) {
-                    console.log("Game already created, redirecting to:", invitationData.gameId);
-                    router.push(`/games/${invitationData.gameId}`);
-                }
-                
-                if (loading) {
-                    setLoading(false);
-                }
+
+                setLoading(false);
+
+                // Set up subscription to listen for opponent's character selection
+                const subscription = client
+                    .listen(
+                        `*[_type == "gameInvitation" && _id == $invitationId][0]`,
+                        { invitationId },
+                    )
+                    .subscribe({
+                        next: (update) => {
+                            if (update.result) {
+                                const updatedInvitation = update.result;
+
+                                // Check if opponent has selected their character
+                                const updatedOpponentCharacterId = isFromUser
+                                    ? updatedInvitation.toCharacterId
+                                    : updatedInvitation.fromCharacterId;
+
+                                setOpponentReady(!!updatedOpponentCharacterId);
+
+                                // If we both have selected characters, create the game
+                                const ourUpdatedCharacterId = isFromUser
+                                    ? updatedInvitation.fromCharacterId
+                                    : updatedInvitation.toCharacterId;
+
+                                if (
+                                    updatedOpponentCharacterId &&
+                                    ourUpdatedCharacterId &&
+                                    !submitting
+                                ) {
+                                    // Both players have selected characters, create the game
+                                    createGame(updatedInvitation._id);
+                                }
+                            }
+                        },
+                        error: (err) => {
+                            console.error(
+                                'Error listening to invitation updates:',
+                                err,
+                            );
+                        },
+                    });
+
+                return () => subscription.unsubscribe();
             } catch (error) {
-                console.error("Error with live invitation fetch:", error);
-                setError("Error loading invitation data");
+                console.error('Error fetching data:', error);
+                setError('Failed to load characters');
                 setLoading(false);
             }
         }
-        
-        fetchInvitationWithLive();
-    }, [invitationId, currentUserId, loading, submitting, createGame, router]);
 
-    // Fetch available characters once
-    useEffect(() => {
-        if (!user?.id || loading === false) return;
-
-        async function fetchCharacters() {
-            try {
-                const characters = await client.fetch(`
-                    *[_type == "member" && gameParticipation == true]{
-                        _id, name, profession, image
-                    } | order(name asc)
-                `);
-
-                setAvailableCharacters(characters || []);
-            } catch (error) {
-                console.error("Error fetching characters:", error);
-            }
-        }
-
-        fetchCharacters();
-    }, [user?.id, loading]);
+        fetchData();
+    }, [user?.id, invitationId, submitting, createGame]);
 
     // Confirm character selection
     async function confirmSelection() {
@@ -189,25 +178,29 @@ export default function CharacterSelectionClient({
         try {
             setSubmitting(true);
             setError(null);
-            console.log("Confirming character selection:", selectedCharacter);
 
-            // Update character selection in Sanity
-            const fieldToUpdate = isFromUser ? 'fromCharacterId' : 'toCharacterId';
-            
-            await client
-                .patch(invitationId)
-                .set({ [fieldToUpdate]: selectedCharacter })
-                .commit();
-                
-            console.log("Character selection confirmed in database");
-                
-            // If opponent already selected, trigger game creation
-            if (opponentReady) {
-                setTimeout(() => {
-                    createGame(invitationId);
-                }, 1000);
-            } else {
-                setSubmitting(false);
+            // Use the new API route instead of directly updating Sanity
+            const response = await fetch('/api/games/select-character', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    invitationId,
+                    characterId: selectedCharacter,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(
+                    errorData.error || 'Failed to select character',
+                );
+            }
+
+            const data = await response.json();
+
+            // If both players have selected characters, create the game
+            if (data.bothPlayersReady) {
+                await createGame(invitationId);
             }
         } catch (error) {
             console.error('Error confirming character selection:', error);
@@ -216,7 +209,10 @@ export default function CharacterSelectionClient({
                     ? error.message
                     : 'Failed to select character',
             );
-            setSubmitting(false);
+        } finally {
+            if (!opponentReady) {
+                setSubmitting(false);
+            }
         }
     }
 
@@ -271,13 +267,6 @@ export default function CharacterSelectionClient({
                 {opponentReady && (
                     <p className='mt-2 text-green-600 font-medium'>
                         Your opponent has already selected their character!
-                    </p>
-                )}
-                
-                {/* Show current selection info for debugging */}
-                {selectedCharacter && (
-                    <p className='mt-2 text-blue-800 text-sm'>
-                        You have selected a character. {opponentReady ? 'Both players are ready!' : 'Waiting for opponent...'}
                     </p>
                 )}
             </div>

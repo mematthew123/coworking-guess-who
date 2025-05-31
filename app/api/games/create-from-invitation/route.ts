@@ -9,6 +9,10 @@ export async function POST(request: Request) {
     const authResult = await auth();
     const userId = authResult?.userId;
     
+
+    console.log("Auth check - userId:", userId); // Debug logging
+    
+
     if (!userId) {
       console.error("Authentication failed - no userId found");
       return NextResponse.json({ error: 'Unauthorized - Please log in' }, { status: 401 });
@@ -19,7 +23,10 @@ export async function POST(request: Request) {
     try {
       const body = await request.json();
       invitationId = body.invitationId;
+
+
       console.log("Creating game from invitation ID:", invitationId);
+
     } catch (error) {
       console.error("Failed to parse request JSON:", error);
       return NextResponse.json({ error: 'Invalid request format' }, { status: 400 });
@@ -57,6 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
     }
     
+
     console.log("Retrieved invitation:", JSON.stringify(invitation, null, 2));
     
     // Check if game already exists
@@ -65,6 +73,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ gameId: invitation.gameId });
     }
     
+
     // Verify that the user is part of this invitation
     const userSanityId = sanityUser._id;
     if (invitation.from._id !== userSanityId && invitation.to._id !== userSanityId) {
@@ -74,6 +83,12 @@ export async function POST(request: Request) {
     
     // Verify that both players have selected characters
     if (!invitation.fromCharacterId || !invitation.toCharacterId) {
+
+      return NextResponse.json({ error: 'Both players must select characters' }, { status: 400 });
+    }
+    
+      
+
       console.error("Missing character selections:");
       console.error("From character:", invitation.fromCharacterId);
       console.error("To character:", invitation.toCharacterId);
@@ -85,6 +100,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
     
+
     // Create board members from all participating members
     const allParticipatingMembers = await client.fetch(`
       *[_type == "member" && gameParticipation == true]._id
@@ -103,6 +119,10 @@ export async function POST(request: Request) {
       boardMemberIds[Math.floor(Math.random() * boardMemberIds.length)] = invitation.toCharacterId;
     }
     
+
+    // Create the game
+    const game = await client.create({
+
     console.log("Creating game with board members:", boardMemberIds.length);
     
     // Create the game with a transaction to ensure atomicity
@@ -115,13 +135,28 @@ export async function POST(request: Request) {
       status: 'active',
       playerOne: { _type: 'reference', _ref: invitation.from._id },
       playerTwo: { _type: 'reference', _ref: invitation.to._id },
-      playerOneTarget: { _type: 'reference', _ref: invitation.toCharacterId },
-      playerTwoTarget: { _type: 'reference', _ref: invitation.fromCharacterId },
+      playerOneTarget: { _type: 'reference', _ref: invitation.toCharacterId }, // Player One tries to guess Player Two's character
+      playerTwoTarget: { _type: 'reference', _ref: invitation.fromCharacterId }, // Player Two tries to guess Player One's character
       boardMembers: boardMemberIds.map(id => ({
         _key: id,
         _ref: id,
         _type: 'reference'
       })),
+      currentTurn: invitation.from._id, // Inviter goes first
+      moves: []
+    });
+    
+    // Update invitation with game ID and mark as completed
+    await client
+      .patch(invitationId)
+      .set({
+        status: 'completed',
+        gameId: game._id
+      })
+      .commit();
+    
+    return NextResponse.json({ gameId: "success" });
+
       currentTurn: invitation.from._id,
       moves: []
     };
