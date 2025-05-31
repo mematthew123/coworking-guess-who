@@ -9,10 +9,8 @@ export async function POST(request: Request) {
     const authResult = await auth();
     const userId = authResult?.userId;
     
-
     console.log("Auth check - userId:", userId); // Debug logging
     
-
     if (!userId) {
       console.error("Authentication failed - no userId found");
       return NextResponse.json({ error: 'Unauthorized - Please log in' }, { status: 401 });
@@ -23,10 +21,6 @@ export async function POST(request: Request) {
     try {
       const body = await request.json();
       invitationId = body.invitationId;
-
-
-      console.log("Creating game from invitation ID:", invitationId);
-
     } catch (error) {
       console.error("Failed to parse request JSON:", error);
       return NextResponse.json({ error: 'Invalid request format' }, { status: 400 });
@@ -50,13 +44,11 @@ export async function POST(request: Request) {
     // Get the invitation with character selections
     const invitation = await client.fetch(`
       *[_type == "gameInvitation" && _id == $invitationId][0]{
-        _id,
         from->{_id},
         to->{_id},
         fromCharacterId,
         toCharacterId,
-        status,
-        gameId
+        status
       }
     `, { invitationId });
     
@@ -64,16 +56,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
     }
     
-
-    console.log("Retrieved invitation:", JSON.stringify(invitation, null, 2));
-    
-    // Check if game already exists
-    if (invitation.gameId) {
-      console.log("Game already exists:", invitation.gameId);
-      return NextResponse.json({ gameId: invitation.gameId });
-    }
-    
-
     // Verify that the user is part of this invitation
     const userSanityId = sanityUser._id;
     if (invitation.from._id !== userSanityId && invitation.to._id !== userSanityId) {
@@ -83,24 +65,10 @@ export async function POST(request: Request) {
     
     // Verify that both players have selected characters
     if (!invitation.fromCharacterId || !invitation.toCharacterId) {
-
       return NextResponse.json({ error: 'Both players must select characters' }, { status: 400 });
     }
     
       
-
-      console.error("Missing character selections:");
-      console.error("From character:", invitation.fromCharacterId);
-      console.error("To character:", invitation.toCharacterId);
-      
-      return NextResponse.json({ 
-        error: 'Both players must select characters',
-        fromCharacter: invitation.fromCharacterId,
-        toCharacter: invitation.toCharacterId
-      }, { status: 400 });
-    }
-    
-
     // Create board members from all participating members
     const allParticipatingMembers = await client.fetch(`
       *[_type == "member" && gameParticipation == true]._id
@@ -119,17 +87,8 @@ export async function POST(request: Request) {
       boardMemberIds[Math.floor(Math.random() * boardMemberIds.length)] = invitation.toCharacterId;
     }
     
-
     // Create the game
     const game = await client.create({
-
-    console.log("Creating game with board members:", boardMemberIds.length);
-    
-    // Create the game with a transaction to ensure atomicity
-    const transaction = client.transaction();
-    
-    // Create the game document
-    const game = {
       _type: 'game',
       startedAt: new Date().toISOString(),
       status: 'active',
@@ -156,35 +115,6 @@ export async function POST(request: Request) {
       .commit();
     
     return NextResponse.json({ gameId: "success" });
-
-      currentTurn: invitation.from._id,
-      moves: []
-    };
-    
-    transaction.create(game);
-    
-    // Update the invitation in the same transaction
-    transaction.patch(invitation._id, patch => 
-      patch.set({
-        status: 'completed',
-        gameId: `_.id`  // Use the ID of the created document
-      })
-    );
-    
-    // Commit the transaction
-    const result = await transaction.commit();
-    console.log("Transaction result:", result);
-
-    // Get the game ID from the result (assuming result contains the created game document)
-    const newGameId = result?.results?.[0]?.id || result?.documentIds?.[0];
-
-    if (!newGameId) {
-      throw new Error("Failed to get game ID from transaction");
-    }
-
-    console.log("Successfully created game:", newGameId);
-
-    return NextResponse.json({ gameId: newGameId });
   } catch (error) {
     console.error('Error in create-from-invitation:', error);
     return NextResponse.json({ 

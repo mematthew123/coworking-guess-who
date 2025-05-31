@@ -1,11 +1,11 @@
-// app/games/setup/[invitationId]/page.tsx
 import CharacterSelectionClient from '@/components/CharacterSelectionClient';
 import { SanityLive } from '@/sanity/lib/live';
 
+
 interface CharacterSelectionPageProps {
-  params: {
+  params: Promise<{
     invitationId: string;
-  };
+  }>;
 }
 
 export default async function CharacterSelectionPage({ params }: CharacterSelectionPageProps) {

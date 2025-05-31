@@ -3,9 +3,9 @@ import WaitingClient from '@/components/WaitingClient';
 import { SanityLive } from '@/sanity/lib/live';
 
 interface WaitingPageProps {
-  params: {
+  params: Promise<{
     invitationId: string;
-  };
+  }>;
 }
 
 export default async function WaitingPage({ params }: WaitingPageProps) {

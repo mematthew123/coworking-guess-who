@@ -32,9 +32,9 @@ export default function GameBoard({
         >
           {/* Member image */}
           <div className="aspect-w-3 aspect-h-4 bg-gray-100">
-            {member.image ? (
+            {member?.image ? (
               <Image 
-                src={urlFor(member.image).width(200).height(267).url()}
+                src={urlFor(member?.image).width(200).height(267).url()}
                 alt={'Profile picture of ' + member.name}
                 width={200}
                 height={267}
@@ -43,7 +43,7 @@ export default function GameBoard({
             ) : (
               <div className="flex items-center justify-center h-full bg-blue-100">
                 <span className="text-5xl text-blue-500 font-bold">
-                  {member.name?.charAt(0) ?? ''}
+                  {member?.name?.charAt(0) ?? ''}
                 </span>
               </div>
             )}
