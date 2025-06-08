@@ -388,12 +388,15 @@ export default function GameClient({ gameId }: GameClientProps) {
                     {/* Game Controls */}
                     <div className='space-y-6'>
                         {/* Question Selector - Only show if it's player's turn and not in guess mode */}
+                       {/* Question Selector - Only show if it's player's turn and not in guess mode */}
                         {isMyTurn && !guessMode && (
                             <QuestionSelector
                                 categories={questionCategories}
                                 onSelectQuestion={handleAskQuestion}
                                 disabled={!isMyTurn || guessMode || isSubmitting}
                                 recentlyAskedIds={game.moves?.slice(-5).map(move => move.questionId).filter(Boolean) as string[]}
+                                boardMembers={boardMembers}
+                                eliminatedIds={eliminatedIds}
                             />
                         )}
 

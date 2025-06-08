@@ -1,4 +1,3 @@
-// components/QuestionSelector.tsx
 'use client'
 
 import { useState, useEffect, useMemo } from 'react';
@@ -26,8 +25,8 @@ export default function QuestionSelector({
   const [showStats, setShowStats] = useState(true);
   
   // Get remaining members
-  const remainingMembers = useMemo(() => 
-    boardMembers.filter(m => !eliminatedIds.includes(m._id)),
+ const remainingMembers = useMemo(() => 
+    boardMembers?.filter(m => !eliminatedIds.includes(m._id)) || [],
     [boardMembers, eliminatedIds]
   );
   
