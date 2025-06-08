@@ -1,0 +1,1182 @@
+[
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "name",
+        "type": "string",
+        "title": "Full Name"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "This will be used for sending notifications and updates and other shit..maybe.",
+        "name": "email",
+        "type": "string"
+      },
+      {
+        "description": "When the user was last active",
+        "hidden": true,
+        "name": "lastActive",
+        "type": "datetime"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Online",
+              "value": "online"
+            },
+            {
+              "title": "Away",
+              "value": "away"
+            },
+            {
+              "title": "Offline",
+              "value": "offline"
+            }
+          ]
+        },
+        "initialValue": "offline",
+        "hidden": true,
+        "name": "onlineStatus",
+        "type": "string"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "image",
+        "type": "image",
+        "title": "Profile Photo"
+      },
+      {
+        "description": "ID from Clerk authentication service",
+        "readOnly": true,
+        "hidden": false,
+        "name": "clerkId",
+        "type": "string",
+        "title": "Clerk ID"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "profession",
+        "type": "string"
+      },
+      {
+        "name": "company",
+        "type": "string"
+      },
+      {
+        "options": {
+          "layout": "tags"
+        },
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "skills",
+        "type": "array"
+      },
+      {
+        "options": {
+          "layout": "tags"
+        },
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "interests",
+        "type": "array"
+      },
+      {
+        "fields": [
+          {
+            "initialValue": false,
+            "name": "prefersQuiet",
+            "type": "boolean",
+            "title": "Prefers Quiet Zone"
+          },
+          {
+            "initialValue": false,
+            "name": "morningPerson",
+            "type": "boolean"
+          },
+          {
+            "initialValue": false,
+            "name": "attendsEvents",
+            "type": "boolean",
+            "title": "Regularly Attends Events"
+          },
+          {
+            "options": {
+              "list": [
+                {
+                  "title": "Hot Desk",
+                  "value": "hotDesk"
+                },
+                {
+                  "title": "Quiet Zone",
+                  "value": "quietZone"
+                },
+                {
+                  "title": "Meeting Area",
+                  "value": "meetingArea"
+                },
+                {
+                  "title": "Phone Booth",
+                  "value": "phoneBooth"
+                },
+                {
+                  "title": "Kitchen/Lounge",
+                  "value": "kitchen"
+                }
+              ]
+            },
+            "name": "preferredArea",
+            "type": "string"
+          }
+        ],
+        "name": "workspacePreferences",
+        "type": "object"
+      },
+      {
+        "options": {
+          "dateFormat": "YYYY-MM-DD"
+        },
+        "name": "joinDate",
+        "type": "date"
+      },
+      {
+        "rows": 3,
+        "name": "bio",
+        "type": "text"
+      },
+      {
+        "fields": [
+          {
+            "validation": [
+              {
+                "rules": [
+                  {
+                    "flag": "uri",
+                    "constraint": {
+                      "options": {
+                        "scheme": [
+                          "/^http$/",
+                          "/^https$/"
+                        ],
+                        "allowRelative": false,
+                        "relativeOnly": false,
+                        "allowCredentials": false
+                      }
+                    }
+                  }
+                ],
+                "level": "error"
+              }
+            ],
+            "name": "linkedin",
+            "type": "url",
+            "title": "LinkedIn"
+          },
+          {
+            "validation": [
+              {
+                "rules": [
+                  {
+                    "flag": "uri",
+                    "constraint": {
+                      "options": {
+                        "scheme": [
+                          "/^http$/",
+                          "/^https$/"
+                        ],
+                        "allowRelative": false,
+                        "relativeOnly": false,
+                        "allowCredentials": false
+                      }
+                    }
+                  }
+                ],
+                "level": "error"
+              }
+            ],
+            "name": "twitter",
+            "type": "url"
+          },
+          {
+            "validation": [
+              {
+                "rules": [
+                  {
+                    "flag": "uri",
+                    "constraint": {
+                      "options": {
+                        "scheme": [
+                          "/^http$/",
+                          "/^https$/"
+                        ],
+                        "allowRelative": false,
+                        "relativeOnly": false,
+                        "allowCredentials": false
+                      }
+                    }
+                  }
+                ],
+                "level": "error"
+              }
+            ],
+            "name": "website",
+            "type": "url"
+          }
+        ],
+        "name": "socialLinks",
+        "type": "object"
+      },
+      {
+        "initialValue": false,
+        "description": "Opt-in to be included in the \"Guess Who\" community game",
+        "name": "gameParticipation",
+        "type": "boolean",
+        "title": "Participate in Community Game"
+      },
+      {
+        "fields": [
+          {
+            "initialValue": false,
+            "name": "isInTech",
+            "type": "boolean",
+            "title": "Works in Tech"
+          },
+          {
+            "initialValue": false,
+            "name": "isDesigner",
+            "type": "boolean",
+            "title": "Is a Designer"
+          },
+          {
+            "initialValue": false,
+            "name": "isDeveloper",
+            "type": "boolean",
+            "title": "Is a Developer"
+          },
+          {
+            "initialValue": false,
+            "name": "isManager",
+            "type": "boolean",
+            "title": "Has Management Role"
+          },
+          {
+            "initialValue": false,
+            "name": "isFreelancer",
+            "type": "boolean",
+            "title": "Is Freelancer/Consultant"
+          },
+          {
+            "initialValue": false,
+            "name": "isRemote",
+            "type": "boolean",
+            "title": "Works Fully Remote"
+          },
+          {
+            "initialValue": false,
+            "name": "hasStartup",
+            "type": "boolean",
+            "title": "Runs a Startup"
+          },
+          {
+            "initialValue": false,
+            "name": "isInMarketing",
+            "type": "boolean",
+            "title": "Works in Marketing"
+          }
+        ],
+        "name": "professionalAttributes",
+        "type": "object"
+      },
+      {
+        "fields": [
+          {
+            "initialValue": false,
+            "name": "knowsJavaScript",
+            "type": "boolean",
+            "title": "Knows JavaScript"
+          },
+          {
+            "initialValue": false,
+            "name": "knowsPython",
+            "type": "boolean"
+          },
+          {
+            "initialValue": false,
+            "name": "knowsReact",
+            "type": "boolean"
+          },
+          {
+            "initialValue": false,
+            "name": "knowsAI",
+            "type": "boolean",
+            "title": "Works with AI/ML"
+          },
+          {
+            "initialValue": false,
+            "name": "knowsDesignTools",
+            "type": "boolean",
+            "title": "Uses Design Tools (Figma, etc)"
+          },
+          {
+            "initialValue": false,
+            "name": "knowsDataAnalysis",
+            "type": "boolean",
+            "title": "Does Data Analysis"
+          }
+        ],
+        "name": "technicalSkills",
+        "type": "object"
+      },
+      {
+        "fields": [
+          {
+            "initialValue": false,
+            "name": "isMorningPerson",
+            "type": "boolean",
+            "title": "Morning Person"
+          },
+          {
+            "initialValue": false,
+            "name": "prefersQuiet",
+            "type": "boolean",
+            "title": "Prefers Quiet Spaces"
+          },
+          {
+            "initialValue": false,
+            "name": "attendsEvents",
+            "type": "boolean",
+            "title": "Regularly Attends Events"
+          },
+          {
+            "initialValue": false,
+            "name": "likesCoffee",
+            "type": "boolean",
+            "title": "Coffee Enthusiast"
+          },
+          {
+            "initialValue": false,
+            "name": "isVegetarian",
+            "type": "boolean",
+            "title": "Vegetarian/Vegan"
+          },
+          {
+            "initialValue": false,
+            "name": "hasPets",
+            "type": "boolean"
+          },
+          {
+            "initialValue": false,
+            "name": "playsMusic",
+            "type": "boolean",
+            "title": "Plays Musical Instrument"
+          },
+          {
+            "initialValue": false,
+            "name": "doesYoga",
+            "type": "boolean",
+            "title": "Practices Yoga/Meditation"
+          }
+        ],
+        "name": "personalTraits",
+        "type": "object"
+      },
+      {
+        "fields": [
+          {
+            "initialValue": false,
+            "name": "usesHotDesk",
+            "type": "boolean",
+            "title": "Usually at Hot Desk Area"
+          },
+          {
+            "initialValue": false,
+            "name": "usesQuietZone",
+            "type": "boolean",
+            "title": "Usually in Quiet Zone"
+          },
+          {
+            "initialValue": false,
+            "name": "usesMeetingRooms",
+            "type": "boolean",
+            "title": "Frequently Books Meeting Rooms"
+          },
+          {
+            "initialValue": false,
+            "name": "worksWeekends",
+            "type": "boolean",
+            "title": "Sometimes Works Weekends"
+          },
+          {
+            "initialValue": false,
+            "name": "takesCallsOften",
+            "type": "boolean",
+            "title": "Takes Many Phone/Video Calls"
+          },
+          {
+            "initialValue": false,
+            "name": "wearsHeadphones",
+            "type": "boolean",
+            "title": "Usually Wears Headphones"
+          }
+        ],
+        "name": "workStyle",
+        "type": "object"
+      },
+      {
+        "fields": [
+          {
+            "initialValue": false,
+            "name": "playsVideoGames",
+            "type": "boolean"
+          },
+          {
+            "initialValue": false,
+            "name": "doesSports",
+            "type": "boolean",
+            "title": "Plays Sports Regularly"
+          },
+          {
+            "initialValue": false,
+            "name": "likesHiking",
+            "type": "boolean",
+            "title": "Enjoys Hiking/Outdoors"
+          },
+          {
+            "initialValue": false,
+            "name": "readsBooks",
+            "type": "boolean",
+            "title": "Avid Reader"
+          },
+          {
+            "initialValue": false,
+            "name": "watchesAnime",
+            "type": "boolean",
+            "title": "Watches Anime/Manga Fan"
+          },
+          {
+            "initialValue": false,
+            "name": "doesPhotography",
+            "type": "boolean",
+            "title": "Into Photography"
+          },
+          {
+            "initialValue": false,
+            "name": "likesBoardGames",
+            "type": "boolean",
+            "title": "Enjoys Board Games"
+          },
+          {
+            "initialValue": false,
+            "name": "doesArt",
+            "type": "boolean",
+            "title": "Creates Art/Crafts"
+          }
+        ],
+        "name": "hobbies",
+        "type": "object",
+        "title": "Hobbies & Interests"
+      },
+      {
+        "fields": [
+          {
+            "initialValue": false,
+            "name": "isNewMember",
+            "type": "boolean",
+            "title": "Joined Within Last 3 Months"
+          },
+          {
+            "initialValue": false,
+            "name": "isVeteranMember",
+            "type": "boolean",
+            "title": "Member for Over 1 Year"
+          },
+          {
+            "initialValue": false,
+            "name": "isUnder30",
+            "type": "boolean",
+            "title": "Under 30 Years Old"
+          },
+          {
+            "initialValue": false,
+            "name": "hasKids",
+            "type": "boolean",
+            "title": "Has Children"
+          },
+          {
+            "initialValue": false,
+            "name": "speaksMultipleLanguages",
+            "type": "boolean",
+            "title": "Speaks 3+ Languages"
+          },
+          {
+            "initialValue": false,
+            "name": "hasLivedAbroad",
+            "type": "boolean"
+          }
+        ],
+        "name": "experience",
+        "type": "object",
+        "title": "Experience & Background"
+      }
+    ],
+    "name": "member",
+    "type": "document",
+    "title": "Coworking Member"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "title",
+        "type": "string",
+        "title": "Category Title"
+      },
+      {
+        "name": "description",
+        "type": "text"
+      },
+      {
+        "description": "Icon name from a standard icon set (e.g., \"briefcase\", \"coffee\", \"code\")",
+        "name": "icon",
+        "type": "string"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              },
+              {
+                "flag": "min",
+                "constraint": 1
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "of": [
+          {
+            "type": "question"
+          }
+        ],
+        "name": "questions",
+        "type": "array"
+      }
+    ],
+    "name": "questionCategory",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "startedAt",
+        "type": "datetime"
+      },
+      {
+        "name": "endedAt",
+        "type": "datetime"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Active",
+              "value": "active"
+            },
+            {
+              "title": "Completed",
+              "value": "completed"
+            },
+            {
+              "title": "Abandoned",
+              "value": "abandoned"
+            }
+          ]
+        },
+        "initialValue": "active",
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "active",
+                  "completed",
+                  "abandoned"
+                ]
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "status",
+        "type": "string",
+        "title": "Game Status"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "to": [
+          {
+            "type": "member"
+          }
+        ],
+        "name": "playerOne",
+        "type": "reference"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "to": [
+          {
+            "type": "member"
+          }
+        ],
+        "name": "playerTwo",
+        "type": "reference"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "The member that Player Two is trying to guess",
+        "to": [
+          {
+            "type": "member"
+          }
+        ],
+        "name": "playerOneTarget",
+        "type": "reference"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "The member that Player One is trying to guess",
+        "to": [
+          {
+            "type": "member"
+          }
+        ],
+        "name": "playerTwoTarget",
+        "type": "reference"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              },
+              {
+                "flag": "min",
+                "constraint": 12
+              },
+              {
+                "flag": "max",
+                "constraint": 25
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "of": [
+          {
+            "to": [
+              {
+                "type": "member"
+              }
+            ],
+            "type": "reference",
+            "title": "Reference to coworking member"
+          }
+        ],
+        "name": "boardMembers",
+        "type": "array"
+      },
+      {
+        "description": "ID of the player whose turn it is",
+        "name": "currentTurn",
+        "type": "string"
+      },
+      {
+        "description": "ID of the winning player",
+        "name": "winner",
+        "type": "string"
+      },
+      {
+        "of": [
+          {
+            "type": "gameMove"
+          }
+        ],
+        "name": "moves",
+        "type": "array",
+        "title": "Game Moves"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "senderId",
+                "type": "string",
+                "title": "Sender ID"
+              },
+              {
+                "name": "senderName",
+                "type": "string"
+              },
+              {
+                "name": "message",
+                "type": "text"
+              },
+              {
+                "name": "timestamp",
+                "type": "datetime"
+              }
+            ],
+            "type": "object",
+            "name": "chatMessage"
+          }
+        ],
+        "name": "chat",
+        "type": "array",
+        "title": "Game Chat"
+      }
+    ],
+    "name": "game",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "ID of the player who made this move",
+        "name": "playerId",
+        "type": "string",
+        "title": "Player ID"
+      },
+      {
+        "description": "Name of the player (stored for convenience)",
+        "name": "playerName",
+        "type": "string"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "The text of the question that was asked",
+        "name": "questionText",
+        "type": "string"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "Reference to the question that was asked (category ID + question index)",
+        "name": "questionId",
+        "type": "string",
+        "title": "Question ID"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "timestamp",
+        "type": "datetime"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "Whether the answer to the question was Yes (true) or No (false)",
+        "name": "answer",
+        "type": "boolean"
+      },
+      {
+        "description": "Number of members eliminated by this question",
+        "name": "eliminatedCount",
+        "type": "number"
+      }
+    ],
+    "name": "gameMove",
+    "type": "object"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "The yes/no question displayed to players",
+        "name": "text",
+        "type": "string",
+        "title": "Question Text"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "description": "The path to the attribute in the member document (e.g., \"skills\", \"workspacePreferences.morningPerson\")",
+        "name": "attributePath",
+        "type": "string",
+        "title": "Member Attribute Path"
+      },
+      {
+        "description": "For arrays (like skills), the value to check. For booleans, leave empty as it will check if true.",
+        "name": "attributeValue",
+        "type": "string"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Professional",
+              "value": "professional"
+            },
+            {
+              "title": "Personal",
+              "value": "personal"
+            },
+            {
+              "title": "Workspace",
+              "value": "workspace"
+            },
+            {
+              "title": "Skills",
+              "value": "skills"
+            }
+          ]
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "professional",
+                  "personal",
+                  "workspace",
+                  "skills"
+                ]
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "category",
+        "type": "string",
+        "title": "Question Category"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Very Easy",
+              "value": 1
+            },
+            {
+              "title": "Easy",
+              "value": 2
+            },
+            {
+              "title": "Medium",
+              "value": 3
+            },
+            {
+              "title": "Hard",
+              "value": 4
+            },
+            {
+              "title": "Very Hard",
+              "value": 5
+            }
+          ]
+        },
+        "initialValue": 3,
+        "description": "A rating from 1 (easy) to 5 (hard) to indicate how specific the question is",
+        "name": "difficulty",
+        "type": "number",
+        "title": "Difficulty Level"
+      }
+    ],
+    "name": "question",
+    "type": "object"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "to": [
+          {
+            "type": "member"
+          }
+        ],
+        "name": "from",
+        "type": "reference"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "to": [
+          {
+            "type": "member"
+          }
+        ],
+        "name": "to",
+        "type": "reference"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Pending",
+              "value": "pending"
+            },
+            {
+              "title": "Accepted",
+              "value": "accepted"
+            },
+            {
+              "title": "Declined",
+              "value": "declined"
+            },
+            {
+              "title": "Expired",
+              "value": "expired"
+            },
+            {
+              "title": "Completed",
+              "value": "completed"
+            }
+          ]
+        },
+        "initialValue": "pending",
+        "name": "status",
+        "type": "string"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "createdAt",
+        "type": "datetime"
+      },
+      {
+        "name": "expiresAt",
+        "type": "datetime"
+      },
+      {
+        "description": "ID of the game created after invitation is accepted",
+        "name": "gameId",
+        "type": "string",
+        "title": "Game ID"
+      },
+      {
+        "description": "ID of the character selected by the inviter",
+        "name": "fromCharacterId",
+        "type": "string",
+        "title": "From Character ID"
+      },
+      {
+        "description": "ID of the character selected by the invited player",
+        "name": "toCharacterId",
+        "type": "string",
+        "title": "To Character ID"
+      }
+    ],
+    "name": "gameInvitation",
+    "type": "document"
+  }
+]
