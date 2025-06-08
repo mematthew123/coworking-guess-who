@@ -1,48 +1,16 @@
-import { useState, useEffect } from 'react';
-import { Question, GameMove } from '@/sanity.types';
+// hooks/useGameState.ts
+import { useState, useEffect, useCallback } from 'react';
 import { client } from '@/sanity/lib/client';
 import {
     ExpandedGame,
     ExpandedMember,
     ExpandedQuestionCategory,
-    getNestedProperty,
 } from '@/types/groqResults';
 import { useUser } from '@clerk/nextjs';
-import { useCallback } from 'react';
-
-function resolveQuestionAnswer(
-    question: Question,
-    member: ExpandedMember,
-): boolean {
-    const { attributePath, attributeValue } = question;
-
-    if (!attributePath) return false;
-
-    // Get the property value using the helper
-    const value = getNestedProperty(member, attributePath);
-
-    // Different attribute types require different comparisons
-    if (Array.isArray(value)) {
-        return attributeValue ? value.includes(attributeValue) : false;
-    } else if (typeof value === 'boolean') {
-        return value === true;
-    } else if (typeof value === 'string') {
-        return attributeValue ? value === attributeValue : false;
-    }
-
-    return false;
-}
-
-function parseQuestionId(questionId: string): {
-    categoryId: string;
-    questionIndex: number;
-} {
-    const [categoryId, indexStr] = questionId.split(':');
-    return {
-        categoryId,
-        questionIndex: parseInt(indexStr, 10),
-    };
-}
+import { 
+    resolveQuestionAnswer, 
+    calculateEliminatedFromHistory 
+} from '@/lib/question-utils';
 
 export default function useGameState(gameId: string) {
     const [game, setGame] = useState<ExpandedGame | null>(null);
@@ -55,15 +23,12 @@ export default function useGameState(gameId: string) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const { user } = useUser();
-    const playerId = user?.id;
-
-    // Move fetchGameData to component scope so it can be returned
 
     const fetchGameData = useCallback(async () => {
         try {
             setLoading(true);
 
-            // First, get the Sanity member ID for the current user
+            // Get the Sanity member ID for the current user
             let sanityUserId = null;
             if (user?.id) {
                 const memberDoc = await client.fetch(
@@ -73,20 +38,29 @@ export default function useGameState(gameId: string) {
                 sanityUserId = memberDoc;
             }
 
-            // Now fetch game data
+            // Fetch game data
             const gameData = await client.fetch<ExpandedGame>(
                 `
-        *[_type == "game" && _id == $gameId][0]{
-          ...,
-          playerOne->{_id, name},
-          playerTwo->{_id, name},
-          playerOneTarget->{_id},
-          playerTwoTarget->{_id},
-          boardMembers[]->{
-            _id, name, profession, image, skills, interests, workspacePreferences
-          }
-        }
-      `,
+                *[_type == "game" && _id == $gameId][0]{
+                  ...,
+                  playerOne->{_id, name},
+                  playerTwo->{_id, name},
+                  playerOneTarget->{_id},
+                  playerTwoTarget->{_id},
+                  boardMembers[]->{
+                    _id, 
+                    name, 
+                    profession, 
+                    image,
+                    professionalAttributes,
+                    technicalSkills,
+                    personalTraits,
+                    workStyle,
+                    hobbies,
+                    experience
+                  }
+                }
+                `,
                 { gameId },
             );
 
@@ -99,35 +73,29 @@ export default function useGameState(gameId: string) {
             setGame(gameData);
             setBoardMembers(gameData.boardMembers || []);
 
-            // Check if it's our turn using the Sanity member ID
-            const isYourTurn = sanityUserId === gameData.currentTurn;
-            console.log(
-                'Is your turn:',
-                isYourTurn,
-                'sanityUserId:',
-                sanityUserId,
-                'currentTurn:',
-                gameData.currentTurn,
-            );
-            setIsMyTurn(isYourTurn);
+            // Check if it's our turn
+            setIsMyTurn(sanityUserId === gameData.currentTurn);
 
             // Fetch question categories
             const categories = await client.fetch<ExpandedQuestionCategory[]>(`
-          *[_type == "questionCategory"]{
-            _id, title, icon, description,
-            questions[]
-          }
-        `);
+                *[_type == "questionCategory"]{
+                    _id, 
+                    title, 
+                    icon, 
+                    description,
+                    questions[]
+                }
+            `);
 
             setQuestionCategories(categories);
 
-            // Calculate eliminated members based on previous moves
-            if (gameData.moves && gameData.moves.length > 0) {
-                const eliminated = calculateEliminatedMembers(
+            // Calculate eliminated members based on game history
+            if (gameData.moves && gameData.moves.length > 0 && sanityUserId) {
+                const eliminated = calculateEliminatedFromHistory(
                     gameData.moves,
                     gameData.boardMembers,
                     categories,
-                    playerId ?? '',
+                    sanityUserId
                 );
                 setEliminatedIds(eliminated);
             }
@@ -138,7 +106,7 @@ export default function useGameState(gameId: string) {
             setError('Failed to load game data');
             setLoading(false);
         }
-    }, [user?.id, gameId, playerId]);
+    }, [user?.id, gameId]);
 
     useEffect(() => {
         fetchGameData();
@@ -169,84 +137,43 @@ export default function useGameState(gameId: string) {
 
             const data = await response.json();
 
-            // Update local state to reflect the turn change
+            // Update local state
             setIsMyTurn(false);
 
-            // Update local state with the new eliminated members
+            // Calculate newly eliminated members
             if (data.move && data.move.answer !== undefined) {
-                const category = questionCategories.find(
-                    (c) => c._id === categoryId,
-                );
-                if (!category || !category.questions) return;
+                const category = questionCategories.find(c => c._id === categoryId);
+                const question = category?.questions?.[questionIndex];
 
-                const question = category.questions[questionIndex];
+                if (question) {
+                    // Get currently remaining members
+                    const remainingMembers = boardMembers.filter(
+                        m => !eliminatedIds.includes(m._id)
+                    );
 
-                // Calculate eliminated members
-                const newEliminatedIds = [...eliminatedIds];
-                boardMembers.forEach((member) => {
-                    if (!eliminatedIds.includes(member._id)) {
-                        const memberWouldAnswer = resolveQuestionAnswer(
-                            question,
-                            member,
-                        );
-                        if (memberWouldAnswer !== data.move.answer) {
-                            newEliminatedIds.push(member._id);
-                        }
-                    }
-                });
+                    // Find members to eliminate based on the answer
+                    const newEliminatedIds = remainingMembers
+                        .filter(member => {
+                            const memberAnswer = resolveQuestionAnswer(question, member);
+                            return memberAnswer !== data.move.answer;
+                        })
+                        .map(m => m._id);
 
-                setEliminatedIds(newEliminatedIds);
+                    // Update eliminated list
+                    setEliminatedIds([...eliminatedIds, ...newEliminatedIds]);
+                }
             }
+
+            // Refresh game data after a short delay
+            setTimeout(() => {
+                fetchGameData();
+            }, 1000);
+
         } catch (err) {
             console.error('Error asking question:', err);
         }
     };
 
-    // Helper function to calculate eliminated members
-    const calculateEliminatedMembers = (
-        moves: Array<GameMove & { _key: string }>,
-        members: ExpandedMember[],
-        categories: ExpandedQuestionCategory[],
-        currentPlayerId: string,
-    ): string[] => {
-        if (!moves || !Array.isArray(moves)) return [];
-
-        const eliminated: string[] = [];
-
-        // Filter moves to only include the current player's moves
-        const playerMoves = moves.filter(
-            (move) => move.playerId === currentPlayerId,
-        );
-
-        // For each member, check if they would have been eliminated by any move
-        members.forEach((member) => {
-            for (const move of playerMoves) {
-                if (!move.questionId) continue;
-
-                const { categoryId, questionIndex } = parseQuestionId(
-                    move.questionId,
-                );
-                const category = categories.find((c) => c._id === categoryId);
-                if (!category || !category.questions) continue;
-
-                const question = category.questions[questionIndex];
-                if (!question) continue;
-
-                const memberWouldAnswer = resolveQuestionAnswer(
-                    question,
-                    member,
-                );
-                if (memberWouldAnswer !== move.answer) {
-                    eliminated.push(member._id);
-                    break;
-                }
-            }
-        });
-
-        return eliminated;
-    };
-
-    // Modified makeGuess function in useGameState.ts
     const makeGuess = async (memberId: string) => {
         if (!game || !isMyTurn) {
             console.log('Not your turn');
@@ -275,12 +202,17 @@ export default function useGameState(gameId: string) {
             if (data.gameOver) {
                 setGame((prev) =>
                     prev
-                        ? { ...prev, status: 'completed', winner: user?.id }
+                        ? { ...prev, status: 'completed', winner: data.winner }
                         : null,
                 );
             } else {
                 setIsMyTurn(false);
             }
+
+            // Refresh game data
+            setTimeout(() => {
+                fetchGameData();
+            }, 1000);
 
             return data.correct;
         } catch (err) {

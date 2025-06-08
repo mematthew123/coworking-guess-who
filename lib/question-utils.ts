@@ -1,127 +1,251 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Question } from '@/../../sanity.types';
-import { ExpandedMember, ExpandedQuestionCategory } from '../types/groqResults';
-
-
-/**
- * Get a nested property from an object using a path string
- * e.g. "workspacePreferences.morningPerson"
- */
-export function getNestedProperty(obj: Record<string, any>, path: string): any {
-  const parts = path.split('.');
-  let current = obj;
-  
-  for (const part of parts) {
-    if (current === undefined || current === null) return undefined;
-    current = current[part];
-  }
-  
-  return current;
-}
+// lib/question-utils.ts
+import { Question } from '@/sanity.types';
+import { ExpandedMember, ExpandedQuestionCategory } from '@/types/groqResults';
 
 /**
- * Resolves whether a member matches a question's criteria
+ * Simplified answer resolution - always returns boolean
  */
-export function resolveQuestionAnswer(question: Question, member: ExpandedMember): boolean {
+export function resolveQuestionAnswer(
+  question: Question, 
+  member: ExpandedMember
+): boolean {
   if (!question.attributePath) return false;
   
-  // Get the property value
-  const value = getNestedProperty(member, question.attributePath);
+  // Split path (e.g., "professionalAttributes.isInTech")
+  const pathParts = question.attributePath.split('.');
+  let value: any = member;
   
-  // Different attribute types require different comparisons
-  if (Array.isArray(value)) {
-    // For arrays (like skills, interests)
-    return question.attributeValue 
-      ? value.some(item => 
-          typeof item === 'string' 
-            ? item.toLowerCase() === question.attributeValue?.toLowerCase() 
-            : item === question.attributeValue
-        ) 
-      : false;
-  } else if (typeof value === 'boolean') {
-    // For boolean properties
-    return value === true;
-  } else if (typeof value === 'string') {
-    // For string properties
-    return question.attributeValue 
-      ? value.toLowerCase() === question.attributeValue.toLowerCase() 
-      : false;
-  } else if (typeof value === 'number') {
-    // For numeric properties
-    return question.attributeValue 
-      ? value === Number(question.attributeValue) 
-      : false;
+  // Navigate to the boolean value
+  for (const part of pathParts) {
+    if (value === undefined || value === null) return false;
+    value = value[part];
   }
   
-  return false;
+  // For boolean attributes, simply return the value
+  return value === true;
 }
 
 /**
- * Calculates what percentage of members would answer "yes" to this question
- * Useful for determining if a question is useful (should eliminate some but not all)
+ * Calculate how effective a question is (how evenly it splits remaining members)
  */
 export function calculateQuestionEffectiveness(
-  question: Question, 
-  members: ExpandedMember[]
+  question: Question,
+  remainingMembers: ExpandedMember[]
 ): number {
-  if (!members.length) return 0;
+  if (!remainingMembers.length) return 0;
   
-  const yesCount = members.filter(member => resolveQuestionAnswer(question, member)).length;
-  return yesCount / members.length;
+  const yesCount = remainingMembers.filter(member => 
+    resolveQuestionAnswer(question, member)
+  ).length;
+  
+  const percentage = yesCount / remainingMembers.length;
+  
+  // Best effectiveness is 50/50 split (0.5)
+  // Return how far from 0.5 this question is
+  return Math.abs(0.5 - percentage);
 }
 
 /**
- * Generates a question ID from category ID and index
+ * Filter members based on a question and answer
  */
-export function generateQuestionId(categoryId: string, questionIndex: number): string {
-  return `${categoryId}:${questionIndex}`;
+export function filterMembersByAnswer(
+  members: ExpandedMember[],
+  question: Question,
+  answer: boolean
+): ExpandedMember[] {
+  return members.filter(member => 
+    resolveQuestionAnswer(question, member) === answer
+  );
 }
 
 /**
- * Parses a question ID back into category ID and index
+ * Get question statistics for UI display
  */
-export function parseQuestionId(questionId: string): { categoryId: string; questionIndex: number } {
-  const [categoryId, indexStr] = questionId.split(':');
-  return {
-    categoryId,
-    questionIndex: parseInt(indexStr, 10),
+export function getQuestionStats(
+  question: Question,
+  members: ExpandedMember[]
+): {
+  yesCount: number;
+  noCount: number;
+  effectiveness: number;
+  isOptimal: boolean;
+} {
+  const yesCount = members.filter(m => resolveQuestionAnswer(question, m)).length;
+  const noCount = members.length - yesCount;
+  const effectiveness = calculateQuestionEffectiveness(question, members);
+  
+  return { 
+    yesCount, 
+    noCount, 
+    effectiveness,
+    isOptimal: effectiveness < 0.15 // Within 15% of perfect split
   };
 }
 
-
+/**
+ * Calculate all eliminated members from game history
+ */
+export function calculateEliminatedFromHistory(
+  moves: Array<{ questionId?: string; answer?: boolean; playerId?: string }>,
+  allMembers: ExpandedMember[],
+  questionCategories: ExpandedQuestionCategory[],
+  currentPlayerId: string
+): string[] {
+  const remainingIds = new Set(allMembers.map(m => m._id));
+  
+  // Only process moves from the current player
+  const playerMoves = moves.filter(move => move.playerId === currentPlayerId);
+  
+  playerMoves.forEach(move => {
+    if (!move.questionId || move.answer === undefined) return;
+    
+    // Parse questionId format: "categoryId:questionIndex"
+    const [categoryId, indexStr] = move.questionId.split(':');
+    const questionIndex = parseInt(indexStr, 10);
+    
+    // Find the question
+    const category = questionCategories.find(c => c._id === categoryId);
+    const question = category?.questions?.[questionIndex];
+    
+    if (!question) return;
+    
+    // Remove members who would answer differently
+    allMembers.forEach(member => {
+      if (remainingIds.has(member._id)) {
+        const memberAnswer = resolveQuestionAnswer(question, member);
+        if (memberAnswer !== move.answer) {
+          remainingIds.delete(member._id);
+        }
+      }
+    });
+  });
+  
+  // Return array of eliminated IDs
+  return allMembers
+    .map(m => m._id)
+    .filter(id => !remainingIds.has(id));
+}
 
 /**
- * Finds the most effective questions for the current game state
- * (questions that would eliminate close to half the remaining candidates)
+ * Calculate eliminations for a single question
  */
-export function findOptimalQuestions(
-  categories: ExpandedQuestionCategory[],
+export function calculateEliminations(
+  question: Question,
+  answer: boolean,
+  members: ExpandedMember[]
+): number {
+  return members.filter(member => 
+    resolveQuestionAnswer(question, member) !== answer
+  ).length;
+}
+
+/**
+ * Process a game move and return eliminated member IDs
+ */
+export function processGameMove(
+  question: Question,
+  answer: boolean,
+  allMembers: ExpandedMember[],
+  currentlyRemainingIds: string[]
+): string[] {
+  const eliminatedIds: string[] = [];
+  
+  allMembers.forEach(member => {
+    if (currentlyRemainingIds.includes(member._id)) {
+      const memberAnswer = resolveQuestionAnswer(question, member);
+      if (memberAnswer !== answer) {
+        eliminatedIds.push(member._id);
+      }
+    }
+  });
+  
+  return eliminatedIds;
+}
+
+/**
+ * Suggest optimal questions based on remaining members
+ */
+export function getSuggestedQuestions(
+  availableQuestions: Question[],
   remainingMembers: ExpandedMember[],
-  askedQuestionIds: string[] = []
-): { categoryId: string; questionIndex: number; effectiveness: number }[] {
-  if (!remainingMembers.length || !categories.length) return [];
+  limit: number = 5
+): Question[] {
+  // Calculate effectiveness for each question
+  const questionsWithStats = availableQuestions.map(question => ({
+    question,
+    effectiveness: calculateQuestionEffectiveness(question, remainingMembers)
+  }));
   
-  // Flatten all questions and calculate effectiveness
-  const allQuestions = categories.flatMap(category => 
-    (category.questions || []).map((question, index) => ({
-      categoryId: category._id,
-      questionIndex: index,
-      question,
-      effectiveness: Math.abs(0.5 - calculateQuestionEffectiveness(question, remainingMembers))
-    }))
-  );
+  // Sort by effectiveness (lower is better - closer to 50/50 split)
+  questionsWithStats.sort((a, b) => a.effectiveness - b.effectiveness);
   
-  // Filter out already asked questions
-  const availableQuestions = allQuestions.filter(q => 
-    !askedQuestionIds.includes(generateQuestionId(q.categoryId, q.questionIndex))
-  );
+  // Return top questions
+  return questionsWithStats
+    .slice(0, limit)
+    .map(item => item.question);
+}
+
+/**
+ * Game state tracker for managing eliminations
+ */
+export class GameStateTracker {
+  private remainingMembers: Set<string>;
+  private eliminationHistory: Array<{
+    questionId: string;
+    answer: boolean;
+    eliminated: string[];
+  }> = [];
   
-  // Sort by effectiveness (closest to 50/50 split)
-  return availableQuestions
-    .sort((a, b) => a.effectiveness - b.effectiveness)
-    .map(({ categoryId, questionIndex, effectiveness }) => ({
-      categoryId,
-      questionIndex,
-      effectiveness
-    }));
+  constructor(initialMembers: ExpandedMember[]) {
+    this.remainingMembers = new Set(initialMembers.map(m => m._id));
+  }
+  
+  applyQuestion(
+    question: Question,
+    answer: boolean,
+    allMembers: ExpandedMember[]
+  ): string[] {
+    const eliminated: string[] = [];
+    
+    allMembers.forEach(member => {
+      if (this.remainingMembers.has(member._id)) {
+        const memberAnswer = resolveQuestionAnswer(question, member);
+        
+        // Eliminate if answer doesn't match
+        if (memberAnswer !== answer) {
+          this.remainingMembers.delete(member._id);
+          eliminated.push(member._id);
+        }
+      }
+    });
+    
+    this.eliminationHistory.push({
+      questionId: question.attributePath || '',
+      answer,
+      eliminated
+    });
+    
+    return eliminated;
+  }
+  
+  getRemainingMembers(): string[] {
+    return Array.from(this.remainingMembers);
+  }
+  
+  getRemainingCount(): number {
+    return this.remainingMembers.size;
+  }
+  
+  canUndo(): boolean {
+    return this.eliminationHistory.length > 0;
+  }
+  
+  undo(): void {
+    const lastAction = this.eliminationHistory.pop();
+    if (lastAction) {
+      // Re-add eliminated members
+      lastAction.eliminated.forEach(id => this.remainingMembers.add(id));
+    }
+  }
 }
