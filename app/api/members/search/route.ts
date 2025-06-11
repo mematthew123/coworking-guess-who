@@ -1,4 +1,3 @@
-// app/api/members/search/route.ts
 import { NextResponse, NextRequest } from 'next/server';
 import { client } from '@/sanity/lib/client';
 
