@@ -9,7 +9,7 @@ export default function Navigation() {
   const { isSignedIn, isLoaded } = useUser();
   
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Directory', path: '/directory' },
     { name: 'Community Games', path: '/games' },
     { name: 'Profile', path: '/profile' }
   ];
