@@ -1,11 +1,13 @@
 import { usePhaseAnimation, useMagneticHover, useContinuousRotation, useRevealAnimation } from "@/hooks/animations";
 import { useRef, useState, useEffect } from "react";
+import { gsap } from "gsap";
 
 export const CommunityAvatars = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const avatarRefs = useRef<(HTMLDivElement | null)[]>([]);
     const connectionRefs = useRef<(SVGElement | null)[]>([]);
     const [hoveredAvatar, setHoveredAvatar] = useState<number | null>(null);
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     
     // Use phase animation hook
     const { currentPhase } = usePhaseAnimation(['scattered', 'searching', 'connecting', 'community'], 3000);
@@ -29,6 +31,23 @@ export const CommunityAvatars = () => {
         { id: 7, emoji: '👨‍🎤', role: 'Creative', gradient: 'from-red-400 to-red-600', skills: ['Content', 'Video'] },
         { id: 8, emoji: '👩‍⚕️', role: 'Consultant', gradient: 'from-teal-400 to-teal-600', skills: ['Strategy', 'Analysis'] },
     ];
+
+    // Get window dimensions after mount
+    useEffect(() => {
+        const updateDimensions = () => {
+            setDimensions({
+                width: window.innerWidth,
+                height: window.innerHeight
+            });
+        };
+
+        // Set initial dimensions
+        updateDimensions();
+
+        // Update on resize
+        window.addEventListener('resize', updateDimensions);
+        return () => window.removeEventListener('resize', updateDimensions);
+    }, []);
 
     // Set up avatar refs for magnetic hover
     useEffect(() => {
@@ -126,6 +145,9 @@ export const CommunityAvatars = () => {
         };
     }, [currentPhase, avatars.length]);
 
+    // Don't render connection lines until we have dimensions
+    const shouldRenderConnections = dimensions.width > 0 && dimensions.height > 0;
+
     return (
         <div ref={containerRef} className="absolute inset-0 pointer-events-none overflow-hidden">
             {/* Enhanced community center */}
@@ -152,16 +174,16 @@ export const CommunityAvatars = () => {
                         </stop>
                     </linearGradient>
                 </defs>
-                {avatars.map((_, index) => (
+                {shouldRenderConnections && avatars.map((_, index) => (
                     <g key={`connection-${index}`} ref={el => { connectionRefs.current[index] = el; }} className="opacity-0 scale-0">
                         {avatars.slice(index + 1).map((_, j) => {
                             const actualJ = index + j + 1;
                             const angle1 = (index / avatars.length) * Math.PI * 2;
                             const angle2 = (actualJ / avatars.length) * Math.PI * 2;
-                            const x1 = window.innerWidth / 2 + Math.cos(angle1) * 150;
-                            const y1 = window.innerHeight / 2 + Math.sin(angle1) * 150;
-                            const x2 = window.innerWidth / 2 + Math.cos(angle2) * 150;
-                            const y2 = window.innerHeight / 2 + Math.sin(angle2) * 150;
+                            const x1 = dimensions.width / 2 + Math.cos(angle1) * 150;
+                            const y1 = dimensions.height / 2 + Math.sin(angle1) * 150;
+                            const x2 = dimensions.width / 2 + Math.cos(angle2) * 150;
+                            const y2 = dimensions.height / 2 + Math.sin(angle2) * 150;
 
                             return (
                                 <line
