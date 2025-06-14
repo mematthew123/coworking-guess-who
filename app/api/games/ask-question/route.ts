@@ -121,13 +121,32 @@ export async function POST(request: Request) {
       answer
     };
     
-    // Update game in Sanity
+    // Calculate next turn
+    const nextTurn = sanityUserId === playerOneId ? playerTwoId : playerOneId;
+    
+    try {
+      await client
+        .patch(gameId)
+        .setIfMissing({ moves: [] })
+        .append('moves', [newMove])
+        .set({ currentTurn: nextTurn })
+        .commit();
+    } catch (updateError) {
+      console.error('Error updating game:', updateError);
+      return new NextResponse(
+        JSON.stringify({ 
+          error: 'Failed to update game state',
+          details: updateError instanceof Error ? updateError.message : 'Unknown error'
+        }),
+        { status: 500 }
+      );
+    }
     
     return NextResponse.json({
       success: true,
       move: newMove,
       answer,
-      nextTurn: sanityUserId === playerOneId ? playerTwoId : playerOneId
+      nextTurn
     });
     
   } catch (error) {
