@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     // Add a small delay to ensure the character selection has been saved
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Get the invitation with character selections (fetch fresh data)
+    // Get the invitation with character selections AND check if game already exists
     const invitation = await client.fetch(`
       *[_type == "gameInvitation" && _id == $invitationId][0]{
         _id,
@@ -51,7 +51,8 @@ export async function POST(request: Request) {
         to->{_id},
         fromCharacterId,
         toCharacterId,
-        status
+        status,
+        gameId
       }
     `, { invitationId });
     
@@ -59,6 +60,12 @@ export async function POST(request: Request) {
     
     if (!invitation) {
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
+    }
+    
+    // IMPORTANT: Check if a game was already created for THIS invitation
+    if (invitation.gameId) {
+      console.log('Game already created for this invitation:', invitation.gameId);
+      return NextResponse.json({ gameId: invitation.gameId });
     }
     
     // Verify that the user is part of this invitation
@@ -100,22 +107,6 @@ export async function POST(request: Request) {
       invitation.toCharacterId = updatedInvitation.toCharacterId;
     }
     
-    // Check if game already exists for this invitation
-    const existingGame = await client.fetch(`
-      *[_type == "game" && 
-        playerOne._ref == $playerOneId && 
-        playerTwo._ref == $playerTwoId && 
-        status == "active"][0]._id
-    `, {
-      playerOneId: invitation.from._id,
-      playerTwoId: invitation.to._id
-    });
-    
-    if (existingGame) {
-      console.log('Game already exists:', existingGame);
-      return NextResponse.json({ gameId: existingGame });
-    }
-    
     // Create board members from all participating members
     const allParticipatingMembers = await client.fetch(`
       *[_type == "member" && gameParticipation == true]._id
@@ -153,7 +144,8 @@ export async function POST(request: Request) {
         _type: 'reference'
       })),
       currentTurn: invitation.from._id, // Inviter goes first
-      moves: []
+      moves: [],
+      chat: []
     });
     
     console.log('Game created:', game._id);

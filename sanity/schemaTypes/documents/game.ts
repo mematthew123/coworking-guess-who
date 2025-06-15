@@ -90,58 +90,113 @@ export default defineType({
         type: 'array',
         of: [{ type: 'gameMove' }],
       }),
-      defineField({
-        name: 'chat',
-        title: 'Game Chat',
-        type: 'array',
-        of: [
-          {
-            type: 'object',
-            name: 'chatMessage',
-            fields: [
-              {
-                name: 'senderId',
-                title: 'Sender ID',
-                type: 'string',
-              },
-              {
-                name: 'senderName',
-                title: 'Sender Name',
-                type: 'string',
-              },
-              {
-                name: 'message',
-                title: 'Message',
-                type: 'block',
-              },
-              {
-                name: 'timestamp',
-                title: 'Timestamp',
-                type: 'datetime',
-              },
-            ],
-            preview: {
-              select: {
-                title: 'message',
-                subtitle: 'senderName',
-              },
+
+defineField({
+  name: 'chat',
+  title: 'Game Chat',
+  type: 'array',
+  of: [
+    {
+      type: 'object',
+      name: 'chatMessage',
+      fields: [
+        {
+          name: 'userId',
+          title: 'User ID',
+          type: 'string',
+          validation: (Rule) => Rule.required(),
+        },
+        {
+          name: 'userName',
+          title: 'User Name',
+          type: 'string',
+          validation: (Rule) => Rule.required(),
+        },
+        {
+          name: 'content',
+          title: 'Message Content',
+          type: 'array',
+          of: [
+            {
+              type: 'block',
+              styles: [
+                { title: 'Normal', value: 'normal' }
+              ],
+              marks: {
+                decorators: [
+                  { title: 'Strong', value: 'strong' },
+                  { title: 'Emphasis', value: 'em' }
+                ],
+                annotations: []
+              }
+            }
+          ],
+          validation: (Rule) => Rule.required(),
+        },
+        {
+          name: 'timestamp',
+          title: 'Timestamp',
+          type: 'datetime',
+          validation: (Rule) => Rule.required(),
+        },
+        {
+          name: 'gameEvent',
+          title: 'Game Event',
+          type: 'object',
+          fields: [
+            {
+              name: 'type',
+              title: 'Event Type',
+              type: 'string',
+              options: {
+                list: [
+                  { title: 'Question', value: 'question' },
+                  { title: 'Answer', value: 'answer' },
+                  { title: 'Guess', value: 'guess' },
+                  { title: 'Elimination', value: 'elimination' },
+                  { title: 'Game Start', value: 'game_start' },
+                  { title: 'Game End', value: 'game_end' }
+                ]
+              }
             },
-          },
-        ],
-      }),
-    ],
+            {
+              name: 'details',
+              title: 'Event Details',
+              type: 'string'
+            }
+          ]
+        }
+      ],
+      preview: {
+        select: {
+          userName: 'userName',
+          timestamp: 'timestamp',
+          text: 'content[0].children[0].text'
+        },
+        prepare({ userName, timestamp, text }) {
+          return {
+            title: `${userName}: ${text || 'Message'}`,
+            subtitle: timestamp ? new Date(timestamp).toLocaleString() : ''
+          };
+        }
+      }
+    }
+  ]
+  }),
+  ],
   preview: {
     select: {
       playerOne: 'playerOne.name',
       playerTwo: 'playerTwo.name',
       status: 'status',
       startedAt: 'startedAt',
+      endedAt: 'endedAt',
     },
-    prepare({ playerOne, playerTwo, status, startedAt }) {
-      return {
-        title: `${playerOne || 'Unknown'} vs ${playerTwo || 'Unknown'}`,
-        subtitle: `${status} - ${new Date(startedAt).toLocaleDateString()}`,
+    prepare({ playerOne, playerTwo, status, startedAt, endedAt }) {
+      return {    
+        title: `Game: ${playerOne} vs ${playerTwo}`,
+        subtitle: `Status: ${status} | Started: ${new Date(startedAt).toLocaleString()}${endedAt ? ` | Ended: ${new Date(endedAt).toLocaleString()}` : ''}`,
       };
     },
-  },
+  }
 });

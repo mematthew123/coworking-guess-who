@@ -555,74 +555,7 @@ export default function GameClient({ gameId }: GameClientProps) {
             <h1 className='text-2xl font-bold text-gray-900 mb-4 mt-8'>
                 Game Chat
             </h1>
-            {/* Debug Section - Remove after fixing */}
-            {console.log('GameChat Debug:', {
-                game: !!game,
-                sanityUserId: sanityUserId,
-                condition: !!(game && sanityUserId),
-                playerOneName: game?.playerOne?.name,
-                playerTwoName: game?.playerTwo?.name,
-            })}
-
-            {/* Test Box 1: Check if conditions work */}
-            {game && sanityUserId ? (
-                <div
-                    style={{
-                        position: 'fixed',
-                        bottom: '100px',
-                        right: '20px',
-                        backgroundColor: 'green',
-                        color: 'white',
-                        padding: '10px',
-                        zIndex: 9999,
-                        borderRadius: '5px',
-                    }}
-                >
-                    ✓ Conditions Met: game && sanityUserId
-                </div>
-            ) : (
-                <div
-                    style={{
-                        position: 'fixed',
-                        bottom: '100px',
-                        right: '20px',
-                        backgroundColor: 'red',
-                        color: 'white',
-                        padding: '10px',
-                        zIndex: 9999,
-                        borderRadius: '5px',
-                    }}
-                >
-                    ✗ Missing: game={!!game} sanityUserId={!!sanityUserId}
-                </div>
-            )}
-
-            {/* Test Box 2: Simple Fixed Position Test */}
-            <div
-                style={{
-                    position: 'fixed',
-                    bottom: '60px',
-                    right: '20px',
-                    backgroundColor: 'blue',
-                    color: 'white',
-                    padding: '10px',
-                    zIndex: 9999,
-                    borderRadius: '5px',
-                }}
-            >
-                Fixed Position Works
-            </div>
-
-            {/* Test Box 3: Import Test */}
-            {(() => {
-                console.log('GameChat component:', GameChat);
-                console.log(
-                    'Is GameChat a function?',
-                    typeof GameChat === 'function',
-                );
-                return null;
-            })()}
-
+    
             {/* Single GameChat instance - completely outside */}
             {game && sanityUserId && (
                 <GameChat
