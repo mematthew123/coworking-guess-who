@@ -6,7 +6,8 @@ import {
   PortableTextEditable,
   useEditor,
   useEditorSelector,
-  RenderDecoratorFunction} from "@portabletext/editor";
+  RenderDecoratorFunction
+} from "@portabletext/editor";
 import { EventListenerPlugin } from "@portabletext/editor/plugins";
 import * as selectors from "@portabletext/editor/selectors";
 import { defineSchema } from "@portabletext/editor";
@@ -17,7 +18,11 @@ import {
   MessageSquare,
   X,
   Minimize2,
-  Maximize2} from "lucide-react";
+  Maximize2
+} from "lucide-react";
+
+// Import Sanity client for real-time subscription
+import { client } from '@/sanity/lib/client';
 
 // Define the schema for game chat
 const gameChatSchema = defineSchema({
@@ -48,7 +53,7 @@ type ChatMessage = {
 };
 
 // Chat Toolbar Component
-const ChatToolbar: React.FC<{ onSend: () => void; canSend: boolean }> = ({ onSend, canSend }) => {
+const ChatToolbar: React.FC<{ onSend: () => void; canSend: boolean; loading: boolean }> = ({ onSend, canSend, loading }) => {
   const editor = useEditor();
   const isBold = useEditorSelector(editor, selectors.isActiveDecorator("strong"));
   const isItalic = useEditorSelector(editor, selectors.isActiveDecorator("em"));
@@ -82,15 +87,19 @@ const ChatToolbar: React.FC<{ onSend: () => void; canSend: boolean }> = ({ onSen
       </div>
       <button
         onClick={onSend}
-        disabled={!canSend}
+        disabled={!canSend || loading}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-all ${
-          canSend
+          canSend && !loading
             ? 'bg-blue-600 text-white hover:bg-blue-700'
             : 'bg-gray-100 text-gray-400 cursor-not-allowed'
         }`}
       >
-        <Send size={14} />
-        Send
+        {loading ? (
+          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <Send size={14} />
+        )}
+        {loading ? 'Sending...' : 'Send'}
       </button>
     </div>
   );
@@ -167,6 +176,7 @@ interface GameChatProps {
 }
 
 const GameChat: React.FC<GameChatProps> = ({ 
+  gameId,
   currentUserId, 
   currentUserName,
   opponentName,
@@ -175,22 +185,56 @@ const GameChat: React.FC<GameChatProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      userId: 'system',
-      userName: 'Game',
-      content: [{
-        _type: "block",
-        _key: "welcome",
-        children: [{ _type: "span", _key: "s1", text: `Game started! ${currentUserName} vs ${opponentName}` }]
-      }],
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [currentMessage, setCurrentMessage] = useState<PortableTextBlock[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Load existing chat messages from Sanity
+  useEffect(() => {
+    const loadChatMessages = async () => {
+      if (!gameId || !initialLoad) return;
+      
+      try {
+        const response = await fetch(`/api/games/${gameId}/chat`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.messages && data.messages.length > 0) {
+            // Convert Sanity messages to our format
+            const formattedMessages: ChatMessage[] = data.messages.map((msg: any) => ({
+              id: msg._key || Date.now().toString(),
+              userId: msg.senderId,
+              userName: msg.senderName,
+              content: msg.message, // This should already be in Portable Text format
+              timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }));
+            setMessages(formattedMessages);
+          } else {
+            // If no messages, add welcome message
+            setMessages([{
+              id: '1',
+              userId: 'system',
+              userName: 'Game',
+              content: [{
+                _type: "block",
+                _key: "welcome",
+                children: [{ _type: "span", _key: "s1", text: `Game started! ${currentUserName} vs ${opponentName}` }]
+              }],
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }]);
+          }
+        }
+        setInitialLoad(false);
+      } catch (error) {
+        console.error('Error loading chat messages:', error);
+        setInitialLoad(false);
+      }
+    };
+
+    loadChatMessages();
+  }, [gameId, currentUserName, opponentName, initialLoad]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -203,7 +247,53 @@ const GameChat: React.FC<GameChatProps> = ({
     }
   }, [messages, isOpen]);
 
-  const handleSend = () => {
+  // Set up real-time subscription for chat messages
+  useEffect(() => {
+    if (!gameId || initialLoad) return;
+
+    const query = `*[_type == "game" && _id == $gameId]`;
+    const params = { gameId };
+
+    const subscription = client.listen(query, params).subscribe((update) => {
+      if (update.type === 'mutation' && update.result) {
+        const game = update.result as any;
+        
+        if (game.chat && game.chat.length > 0) {
+          // Get the latest message
+          const latestMessage = game.chat[game.chat.length - 1];
+          
+          // Check if this message already exists in our state
+          setMessages(prev => {
+            const messageExists = prev.some(msg => msg.id === latestMessage._key);
+            if (!messageExists && latestMessage.senderId !== currentUserId) {
+              // Only add if it's a new message from the other player
+              const newMessage: ChatMessage = {
+                id: latestMessage._key,
+                userId: latestMessage.senderId,
+                userName: latestMessage.senderName,
+                content: latestMessage.message,
+                timestamp: new Date(latestMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              };
+              
+              // Show notification for new message
+              if (!isOpen) {
+                setUnreadCount(count => count + 1);
+              }
+              
+              return [...prev, newMessage];
+            }
+            return prev;
+          });
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [gameId, currentUserId, isOpen, initialLoad]);
+
+  const handleSend = async () => {
     if (
       currentMessage.length > 0 &&
       currentMessage.some(
@@ -212,6 +302,8 @@ const GameChat: React.FC<GameChatProps> = ({
           block.children[0]?.text
       )
     ) {
+      setLoading(true);
+      
       const newMessage: ChatMessage = {
         id: Date.now().toString(),
         userId: currentUserId,
@@ -220,12 +312,41 @@ const GameChat: React.FC<GameChatProps> = ({
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       
+      // Optimistically add the message to the UI
       setMessages([...messages, newMessage]);
       setCurrentMessage([]);
       
-      // Call the callback if provided
-      if (onSendMessage) {
-        onSendMessage(newMessage);
+      try {
+        // Send to API
+        const response = await fetch('/api/games/send-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            gameId,
+            message: {
+              content: currentMessage
+            }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+
+        // Call the callback if provided
+        if (onSendMessage) {
+          onSendMessage(newMessage);
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+        // Remove the message on error
+        setMessages(prev => prev.filter(msg => msg.id !== newMessage.id));
+        // Show error notification
+        alert('Failed to send message. Please try again.');
+      } finally {
+        setLoading(false);
       }
       
       scrollToBottom();
@@ -345,13 +466,13 @@ const GameChat: React.FC<GameChatProps> = ({
                   placeholder="Type a message..."
                   renderDecorator={renderDecorator}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.key === 'Enter' && !e.shiftKey && !loading) {
                       e.preventDefault();
                       handleSend();
                     }
                   }}
                 />
-                <ChatToolbar onSend={handleSend} canSend={canSend} />
+                <ChatToolbar onSend={handleSend} canSend={canSend} loading={loading} />
               </div>
             </EditorProvider>
           </div>

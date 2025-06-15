@@ -30,15 +30,14 @@ export async function POST(request: Request) {
       return new NextResponse('Member not found', { status: 404 });
     }
 
-    // Create the new message object with a unique key
+    // Create the new message object with correct field names matching the schema
     const newMessage = {
       _key: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       _type: 'chatMessage',
-      userId: member._id,
-      userName: member.name,
-      content: message.content, // This should already be in Portable Text format
-      timestamp: new Date().toISOString(),
-      gameEvent: message.gameEvent || undefined
+      senderId: member._id,  // Changed from userId
+      senderName: member.name,  // Changed from userName
+      message: message.content,  // Changed from content
+      timestamp: new Date().toISOString()
     };
 
     // Append the message to the game's chat array
