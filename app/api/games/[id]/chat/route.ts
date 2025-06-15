@@ -12,7 +12,7 @@ const client = createClient({
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -20,7 +20,7 @@ export async function GET(
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const gameId = params.id;
+    const { id: gameId } = await params;
 
     // Fetch the game with chat messages
     const game = await client.fetch(
