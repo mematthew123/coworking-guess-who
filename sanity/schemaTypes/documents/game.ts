@@ -112,7 +112,7 @@ export default defineType({
               {
                 name: 'message',
                 title: 'Message',
-                type: 'text',
+                type: 'block',
               },
               {
                 name: 'timestamp',

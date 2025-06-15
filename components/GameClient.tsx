@@ -9,9 +9,10 @@ import GameBoard from '@/components/GameBoard';
 import QuestionSelector from '@/components/QuestionSelector';
 import GameHistoryPanel from '@/components/GameHistoryPanel';
 import RealtimeIndicator from '@/components/RealtimeIndicator';
+import GameChat from './GameChat';
 
 interface GameClientProps {
-  gameId: string;
+    gameId: string;
 }
 
 export default function GameClient({ gameId }: GameClientProps) {
@@ -23,7 +24,7 @@ export default function GameClient({ gameId }: GameClientProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
     const previousTurnRef = useRef<string | null>(null);
-    
+
     // Step 1: Get the Sanity user ID that corresponds to the Clerk ID
     useEffect(() => {
         async function fetchSanityUserId() {
@@ -76,7 +77,9 @@ export default function GameClient({ gameId }: GameClientProps) {
             if (!wasMyTurn && isNowMyTurn) {
                 try {
                     const audio = new Audio('/ding.mp3');
-                    audio.play().catch(e => console.log('Audio play error:', e));
+                    audio
+                        .play()
+                        .catch((e) => console.log('Audio play error:', e));
                 } catch (e) {
                     console.log('Audio play error:', e);
                 }
@@ -127,7 +130,10 @@ export default function GameClient({ gameId }: GameClientProps) {
                     <li>Is Your Turn: {isMyTurn ? 'Yes' : 'No'}</li>
                     <li>Player One ID: {game.playerOne?._id || 'Unknown'}</li>
                     <li>Player Two ID: {game.playerTwo?._id || 'Unknown'}</li>
-                    <li>Last Update: {lastUpdate?.toLocaleTimeString() || 'Never'}</li>
+                    <li>
+                        Last Update:{' '}
+                        {lastUpdate?.toLocaleTimeString() || 'Never'}
+                    </li>
                 </ul>
             </div>
         );
@@ -145,15 +151,15 @@ export default function GameClient({ gameId }: GameClientProps) {
 
             // Set submitting state to prevent multiple clicks
             setIsSubmitting(true);
-            
+
             try {
                 const isCorrect = await makeGuess(memberId);
-                
+
                 if (isCorrect) {
                     alert('Congratulations! You guessed correctly!');
                 } else {
                     alert("Sorry, that's not the right person!");
-                    
+
                     // No need to reload the page - the game state hook will handle
                     // updating the UI when the game document changes
                 }
@@ -165,7 +171,7 @@ export default function GameClient({ gameId }: GameClientProps) {
                 setGuessMode(false);
             }
         } else {
-            // Toggle elimination locally 
+            // Toggle elimination locally
             if (eliminatedIds.includes(memberId)) {
                 setEliminatedIds(eliminatedIds.filter((id) => id !== memberId));
             } else {
@@ -174,13 +180,16 @@ export default function GameClient({ gameId }: GameClientProps) {
         }
     };
 
-    const handleAskQuestion = async (categoryId: string, questionIndex: number) => {
+    const handleAskQuestion = async (
+        categoryId: string,
+        questionIndex: number,
+    ) => {
         if (isSubmitting) return;
-        
+
         try {
             setIsSubmitting(true);
             await askQuestion(categoryId, questionIndex);
-            
+
             // Let the SanityLive/fetchGameData handle the update
             // No need for page reload
         } catch (error) {
@@ -195,40 +204,49 @@ export default function GameClient({ gameId }: GameClientProps) {
     // This serves as a backup in case the live updates miss something
     useEffect(() => {
         if (!gameId || !game || isMyTurn) return;
-        
+
         const refreshInterval = setInterval(() => {
             fetchGameData();
         }, 30000); // Check every 30 seconds as a backup
-        
+
         return () => clearInterval(refreshInterval);
     }, [gameId, game, isMyTurn, fetchGameData]);
 
     // Enhanced TurnIndicator component
     const TurnIndicator = () => {
         if (!game) return null;
-        
-        const opponentName = game.playerOne._id === sanityUserId 
-            ? game.playerTwo.name 
-            : game.playerOne.name;
-            
+
+        const opponentName =
+            game.playerOne._id === sanityUserId
+                ? game.playerTwo.name
+                : game.playerOne.name;
+
         return (
-            <div className={`p-4 rounded-lg mb-4 ${
-                isMyTurn 
-                    ? 'bg-blue-100 border-l-4 border-blue-500' 
-                    : 'bg-gray-100 border-l-4 border-gray-500'
-            }`}>
-                <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full mr-3 ${
-                        isMyTurn ? 'bg-blue-500 animate-pulse' : 'bg-gray-500'
-                    }`}></div>
-                    
-                    <h3 className="font-medium text-lg">
-                        {isMyTurn ? "It's Your Turn!" : `Waiting for ${opponentName}`}
+            <div
+                className={`p-4 rounded-lg mb-4 ${
+                    isMyTurn
+                        ? 'bg-blue-100 border-l-4 border-blue-500'
+                        : 'bg-gray-100 border-l-4 border-gray-500'
+                }`}
+            >
+                <div className='flex items-center'>
+                    <div
+                        className={`w-3 h-3 rounded-full mr-3 ${
+                            isMyTurn
+                                ? 'bg-blue-500 animate-pulse'
+                                : 'bg-gray-500'
+                        }`}
+                    ></div>
+
+                    <h3 className='font-medium text-lg'>
+                        {isMyTurn
+                            ? "It's Your Turn!"
+                            : `Waiting for ${opponentName}`}
                     </h3>
                 </div>
-                
+
                 {isMyTurn && (
-                    <p className="mt-2 text-blue-700 text-sm">
+                    <p className='mt-2 text-blue-700 text-sm'>
                         Choose a question or make a guess to continue the game
                     </p>
                 )}
@@ -311,14 +329,14 @@ export default function GameClient({ gameId }: GameClientProps) {
         <>
             {/* Include SanityLive to enable real-time updates */}
             {/* <SanityLive /> */}
-            
+
             <div className='container mx-auto p-4'>
                 <div className='mb-6'>
                     {process.env.NODE_ENV !== 'production' && <TurnDebugInfo />}
                     <h1 className='text-2xl font-bold text-gray-900'>
                         {game.playerOne.name} vs {game.playerTwo.name}
                     </h1>
-                    
+
                     {process.env.NODE_ENV !== 'production' && (
                         <button
                             onClick={takeTurn}
@@ -334,7 +352,7 @@ export default function GameClient({ gameId }: GameClientProps) {
                         isMyTurn={isMyTurn}
                         isRealTimeActive={true} // Always true with SanityLive
                     />
-                    
+
                     {/* New Turn Indicator */}
                     <TurnIndicator />
                 </div>
@@ -358,11 +376,11 @@ export default function GameClient({ gameId }: GameClientProps) {
                                                 : 'bg-green-500 text-white hover:bg-green-600'
                                         } disabled:opacity-50`}
                                     >
-                                        {isSubmitting 
+                                        {isSubmitting
                                             ? 'Processing...'
                                             : guessMode
-                                                ? 'Cancel Guess'
-                                                : 'Make a Guess'}
+                                              ? 'Cancel Guess'
+                                              : 'Make a Guess'}
                                     </button>
                                 )}
                             </div>
@@ -370,8 +388,8 @@ export default function GameClient({ gameId }: GameClientProps) {
                             {guessMode && (
                                 <div className='bg-yellow-100 p-3 mb-4 rounded-md text-sm'>
                                     <p>
-                                        Click on a member card to make your final
-                                        guess!
+                                        Click on a member card to make your
+                                        final guess!
                                     </p>
                                 </div>
                             )}
@@ -388,13 +406,20 @@ export default function GameClient({ gameId }: GameClientProps) {
                     {/* Game Controls */}
                     <div className='space-y-6'>
                         {/* Question Selector - Only show if it's player's turn and not in guess mode */}
-                       {/* Question Selector - Only show if it's player's turn and not in guess mode */}
+                        {/* Question Selector - Only show if it's player's turn and not in guess mode */}
                         {isMyTurn && !guessMode && (
                             <QuestionSelector
                                 categories={questionCategories}
                                 onSelectQuestion={handleAskQuestion}
-                                disabled={!isMyTurn || guessMode || isSubmitting}
-                                recentlyAskedIds={game.moves?.slice(-5).map(move => move.questionId).filter(Boolean) as string[]}
+                                disabled={
+                                    !isMyTurn || guessMode || isSubmitting
+                                }
+                                recentlyAskedIds={
+                                    game.moves
+                                        ?.slice(-5)
+                                        .map((move) => move.questionId)
+                                        .filter(Boolean) as string[]
+                                }
                                 boardMembers={boardMembers}
                                 eliminatedIds={eliminatedIds}
                             />
@@ -411,8 +436,8 @@ export default function GameClient({ gameId }: GameClientProps) {
                                             Make Your Guess
                                         </h3>
                                         <p className='text-gray-600 mb-2'>
-                                            Click on the member you think is your
-                                            opponent!
+                                            Click on the member you think is
+                                            your opponent!
                                         </p>
                                     </div>
                                 ) : (
@@ -422,7 +447,8 @@ export default function GameClient({ gameId }: GameClientProps) {
                                             Ask a Question
                                         </h3>
                                         <p className='text-gray-600 mb-2'>
-                                            Select a question category above to ask your opponent.
+                                            Select a question category above to
+                                            ask your opponent.
                                         </p>
                                     </div>
                                 )
@@ -437,7 +463,8 @@ export default function GameClient({ gameId }: GameClientProps) {
                                         move...
                                     </p>
                                     <p className='text-gray-500 text-sm mt-2'>
-                                        The game will update automatically when it&apos;s your turn.
+                                        The game will update automatically when
+                                        it&apos;s your turn.
                                     </p>
                                 </div>
                             )}
@@ -456,12 +483,15 @@ export default function GameClient({ gameId }: GameClientProps) {
                                 </h3>
                                 <div className='space-y-2'>
                                     <div className='flex justify-between'>
-                                        <span className='text-gray-600'>Status:</span>
+                                        <span className='text-gray-600'>
+                                            Status:
+                                        </span>
                                         <span
                                             className={`font-medium ${
                                                 game.status === 'active'
                                                     ? 'text-green-600'
-                                                    : game.status === 'completed'
+                                                    : game.status ===
+                                                        'completed'
                                                       ? 'text-blue-600'
                                                       : 'text-yellow-600'
                                             }`}
@@ -475,7 +505,9 @@ export default function GameClient({ gameId }: GameClientProps) {
                                     </div>
 
                                     <div className='flex justify-between'>
-                                        <span className='text-gray-600'>Started:</span>
+                                        <span className='text-gray-600'>
+                                            Started:
+                                        </span>
                                         <span className='font-medium'>
                                             {game.startedAt
                                                 ? new Date(
@@ -497,18 +529,19 @@ export default function GameClient({ gameId }: GameClientProps) {
                                             </span>
                                         </div>
                                     )}
-                                    
+
                                     {game.winner && (
                                         <div className='flex justify-between'>
                                             <span className='text-gray-600'>
                                                 Winner:
                                             </span>
                                             <span className='font-medium text-blue-600'>
-                                                {game.winner === sanityUserId 
-                                                    ? 'You!' 
-                                                    : game.winner === game.playerOne._id 
-                                                        ? game.playerOne.name
-                                                        : game.playerTwo.name}
+                                                {game.winner === sanityUserId
+                                                    ? 'You!'
+                                                    : game.winner ===
+                                                        game.playerOne._id
+                                                      ? game.playerOne.name
+                                                      : game.playerTwo.name}
                                             </span>
                                         </div>
                                     )}
@@ -518,6 +551,99 @@ export default function GameClient({ gameId }: GameClientProps) {
                     </div>
                 </div>
             </div>
+
+            <h1 className='text-2xl font-bold text-gray-900 mb-4 mt-8'>
+                Game Chat
+            </h1>
+            {/* Debug Section - Remove after fixing */}
+            {console.log('GameChat Debug:', {
+                game: !!game,
+                sanityUserId: sanityUserId,
+                condition: !!(game && sanityUserId),
+                playerOneName: game?.playerOne?.name,
+                playerTwoName: game?.playerTwo?.name,
+            })}
+
+            {/* Test Box 1: Check if conditions work */}
+            {game && sanityUserId ? (
+                <div
+                    style={{
+                        position: 'fixed',
+                        bottom: '100px',
+                        right: '20px',
+                        backgroundColor: 'green',
+                        color: 'white',
+                        padding: '10px',
+                        zIndex: 9999,
+                        borderRadius: '5px',
+                    }}
+                >
+                    ✓ Conditions Met: game && sanityUserId
+                </div>
+            ) : (
+                <div
+                    style={{
+                        position: 'fixed',
+                        bottom: '100px',
+                        right: '20px',
+                        backgroundColor: 'red',
+                        color: 'white',
+                        padding: '10px',
+                        zIndex: 9999,
+                        borderRadius: '5px',
+                    }}
+                >
+                    ✗ Missing: game={!!game} sanityUserId={!!sanityUserId}
+                </div>
+            )}
+
+            {/* Test Box 2: Simple Fixed Position Test */}
+            <div
+                style={{
+                    position: 'fixed',
+                    bottom: '60px',
+                    right: '20px',
+                    backgroundColor: 'blue',
+                    color: 'white',
+                    padding: '10px',
+                    zIndex: 9999,
+                    borderRadius: '5px',
+                }}
+            >
+                Fixed Position Works
+            </div>
+
+            {/* Test Box 3: Import Test */}
+            {(() => {
+                console.log('GameChat component:', GameChat);
+                console.log(
+                    'Is GameChat a function?',
+                    typeof GameChat === 'function',
+                );
+                return null;
+            })()}
+
+            {/* Single GameChat instance - completely outside */}
+            {game && sanityUserId && (
+                <GameChat
+                    gameId={gameId}
+                    currentUserId={sanityUserId}
+                    currentUserName={
+                        game.playerOne._id === sanityUserId
+                            ? game.playerOne.name || ''
+                            : game.playerTwo.name || ''
+                    }
+                    opponentName={
+                        game.playerOne._id === sanityUserId
+                            ? game.playerTwo.name || ''
+                            : game.playerOne.name || ''
+                    }
+                    isMyTurn={isMyTurn}
+                    onSendMessage={(message) => {
+                        console.log('Message sent:', message);
+                    }}
+                />
+            )}
         </>
     );
 }
