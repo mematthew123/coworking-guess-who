@@ -92,52 +92,52 @@ export default function GameClient({ gameId }: GameClientProps) {
     }, [game?.currentTurn, sanityUserId]);
 
     // Debug function to manually update turn (only in dev mode)
-    async function takeTurn() {
-        if (!game || !sanityUserId) return;
+    // async function takeTurn() {
+    //     if (!game || !sanityUserId) return;
 
-        try {
-            setIsSubmitting(true);
-            const response = await fetch(`/api/debug/take-turn/${game._id}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ playerId: sanityUserId }),
-            });
+    //     try {
+    //         setIsSubmitting(true);
+    //         const response = await fetch(`/api/debug/take-turn/${game._id}`, {
+    //             method: 'POST',
+    //             headers: { 'Content-Type': 'application/json' },
+    //             body: JSON.stringify({ playerId: sanityUserId }),
+    //         });
 
-            if (!response.ok) throw new Error('Failed to take turn');
+    //         if (!response.ok) throw new Error('Failed to take turn');
 
-            alert('Turn updated!');
-            // Instead of reloading, fetch fresh data
-            await fetchGameData();
-            setLastUpdate(new Date());
-        } catch (error) {
-            console.error('Error taking turn:', error);
-            alert('Error updating turn');
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
+    //         alert('Turn updated!');
+    //         // Instead of reloading, fetch fresh data
+    //         await fetchGameData();
+    //         setLastUpdate(new Date());
+    //     } catch (error) {
+    //         console.error('Error taking turn:', error);
+    //         alert('Error updating turn');
+    //     } finally {
+    //         setIsSubmitting(false);
+    //     }
+    // }
 
-    const TurnDebugInfo = () => {
-        if (!game) return null;
+    // const TurnDebugInfo = () => {
+    //     if (!game) return null;
 
-        return (
-            <div className='bg-white p-4 rounded shadow mb-4 text-sm'>
-                <h3 className='font-bold mb-2'>Turn Debug Info</h3>
-                <ul className='space-y-1'>
-                    <li>Your Sanity ID: {sanityUserId || 'Unknown'}</li>
-                    <li>Your Clerk ID: {user?.id || 'Unknown'}</li>
-                    <li>Current Turn ID: {game.currentTurn || 'None'}</li>
-                    <li>Is Your Turn: {isMyTurn ? 'Yes' : 'No'}</li>
-                    <li>Player One ID: {game.playerOne?._id || 'Unknown'}</li>
-                    <li>Player Two ID: {game.playerTwo?._id || 'Unknown'}</li>
-                    <li>
-                        Last Update:{' '}
-                        {lastUpdate?.toLocaleTimeString() || 'Never'}
-                    </li>
-                </ul>
-            </div>
-        );
-    };
+    //     return (
+    //         <div className='bg-white p-4 rounded shadow mb-4 text-sm'>
+    //             <h3 className='font-bold mb-2'>Turn Debug Info</h3>
+    //             <ul className='space-y-1'>
+    //                 <li>Your Sanity ID: {sanityUserId || 'Unknown'}</li>
+    //                 <li>Your Clerk ID: {user?.id || 'Unknown'}</li>
+    //                 <li>Current Turn ID: {game.currentTurn || 'None'}</li>
+    //                 <li>Is Your Turn: {isMyTurn ? 'Yes' : 'No'}</li>
+    //                 <li>Player One ID: {game.playerOne?._id || 'Unknown'}</li>
+    //                 <li>Player Two ID: {game.playerTwo?._id || 'Unknown'}</li>
+    //                 <li>
+    //                     Last Update:{' '}
+    //                     {lastUpdate?.toLocaleTimeString() || 'Never'}
+    //                 </li>
+    //             </ul>
+    //         </div>
+    //     );
+    // };
 
     const handleToggleMember = async (memberId: string) => {
         if (!isMyTurn || isSubmitting) return;
@@ -213,46 +213,46 @@ export default function GameClient({ gameId }: GameClientProps) {
     }, [gameId, game, isMyTurn, fetchGameData]);
 
     // Enhanced TurnIndicator component
-    const TurnIndicator = () => {
-        if (!game) return null;
+    // const TurnIndicator = () => {
+    //     if (!game) return null;
 
-        const opponentName =
-            game.playerOne._id === sanityUserId
-                ? game.playerTwo.name
-                : game.playerOne.name;
+    //     const opponentName =
+    //         game.playerOne._id === sanityUserId
+    //             ? game.playerTwo.name
+    //             : game.playerOne.name;
 
-        return (
-            <div
-                className={`p-4 rounded-lg mb-4 ${
-                    isMyTurn
-                        ? 'bg-blue-100 border-l-4 border-blue-500'
-                        : 'bg-gray-100 border-l-4 border-gray-500'
-                }`}
-            >
-                <div className='flex items-center'>
-                    <div
-                        className={`w-3 h-3 rounded-full mr-3 ${
-                            isMyTurn
-                                ? 'bg-blue-500 animate-pulse'
-                                : 'bg-gray-500'
-                        }`}
-                    ></div>
+    //     return (
+    //         <div
+    //             className={`p-4 rounded-lg mb-4 ${
+    //                 isMyTurn
+    //                     ? 'bg-blue-100 border-l-4 border-blue-500'
+    //                     : 'bg-gray-100 border-l-4 border-gray-500'
+    //             }`}
+    //         >
+    //             <div className='flex items-center'>
+    //                 <div
+    //                     className={`w-3 h-3 rounded-full mr-3 ${
+    //                         isMyTurn
+    //                             ? 'bg-blue-500 animate-pulse'
+    //                             : 'bg-gray-500'
+    //                     }`}
+    //                 ></div>
 
-                    <h3 className='font-medium text-lg'>
-                        {isMyTurn
-                            ? "It's Your Turn!"
-                            : `Waiting for ${opponentName}`}
-                    </h3>
-                </div>
+    //                 <h3 className='font-medium text-lg'>
+    //                     {isMyTurn
+    //                         ? "It's Your Turn!"
+    //                         : `Waiting for ${opponentName}`}
+    //                 </h3>
+    //             </div>
 
-                {isMyTurn && (
-                    <p className='mt-2 text-blue-700 text-sm'>
-                        Choose a question or make a guess to continue the game
-                    </p>
-                )}
-            </div>
-        );
-    };
+    //             {isMyTurn && (
+    //                 <p className='mt-2 text-blue-700 text-sm'>
+    //                     Choose a question or make a guess to continue the game
+    //                 </p>
+    //             )}
+    //         </div>
+    //     );
+    // };
 
     // Handle loading states
     const loading = initialLoading || gameLoading || !isLoaded;
@@ -332,12 +332,13 @@ export default function GameClient({ gameId }: GameClientProps) {
 
             <div className='container mx-auto p-4'>
                 <div className='mb-6'>
-                    {process.env.NODE_ENV !== 'production' && <TurnDebugInfo />}
+                {/* Debug info - only show in development mode  add && <TurnDebugInfo />*/}
+                    {process.env.NODE_ENV !== 'production' }
                     <h1 className='text-2xl font-bold text-gray-900'>
                         {game.playerOne.name} vs {game.playerTwo.name}
                     </h1>
 
-                    {process.env.NODE_ENV !== 'production' && (
+                    {/* {process.env.NODE_ENV !== 'production' && (
                         <button
                             onClick={takeTurn}
                             disabled={isSubmitting}
@@ -345,7 +346,7 @@ export default function GameClient({ gameId }: GameClientProps) {
                         >
                             {isSubmitting ? 'Updating...' : 'Take Turn'}
                         </button>
-                    )}
+                    )} */}
 
                     <RealtimeIndicator
                         lastUpdated={lastUpdate || game._updatedAt}
@@ -354,7 +355,7 @@ export default function GameClient({ gameId }: GameClientProps) {
                     />
 
                     {/* New Turn Indicator */}
-                    <TurnIndicator />
+                    {/* <TurnIndicator /> */}
                 </div>
 
                 <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
