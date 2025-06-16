@@ -85,104 +85,103 @@ export default defineType({
       description: 'ID of the winning player',
     }),
     defineField({
-        name: 'moves',
-        title: 'Game Moves',
-        type: 'array',
-        of: [{ type: 'gameMove' }],
-      }),
-
-defineField({
-  name: 'chat',
-  title: 'Game Chat',
-  type: 'array',
-  of: [
-    {
-      type: 'object',
-      name: 'chatMessage',
-      fields: [
+      name: 'moves',
+      title: 'Game Moves',
+      type: 'array',
+      of: [{ type: 'gameMove' }],
+    }),
+    defineField({
+      name: 'chat',
+      title: 'Game Chat',
+      type: 'array',
+      of: [
         {
-          name: 'userId',
-          title: 'User ID',
-          type: 'string',
-          validation: (Rule) => Rule.required(),
-        },
-        {
-          name: 'userName',
-          title: 'User Name',
-          type: 'string',
-          validation: (Rule) => Rule.required(),
-        },
-        {
-          name: 'content',
-          title: 'Message Content',
-          type: 'array',
-          of: [
-            {
-              type: 'block',
-              styles: [
-                { title: 'Normal', value: 'normal' }
-              ],
-              marks: {
-                decorators: [
-                  { title: 'Strong', value: 'strong' },
-                  { title: 'Emphasis', value: 'em' }
-                ],
-                annotations: []
-              }
-            }
-          ],
-          validation: (Rule) => Rule.required(),
-        },
-        {
-          name: 'timestamp',
-          title: 'Timestamp',
-          type: 'datetime',
-          validation: (Rule) => Rule.required(),
-        },
-        {
-          name: 'gameEvent',
-          title: 'Game Event',
           type: 'object',
+          name: 'chatMessage',
           fields: [
             {
-              name: 'type',
-              title: 'Event Type',
+              name: 'senderId',
+              title: 'Sender ID',
               type: 'string',
-              options: {
-                list: [
-                  { title: 'Question', value: 'question' },
-                  { title: 'Answer', value: 'answer' },
-                  { title: 'Guess', value: 'guess' },
-                  { title: 'Elimination', value: 'elimination' },
-                  { title: 'Game Start', value: 'game_start' },
-                  { title: 'Game End', value: 'game_end' }
-                ]
-              }
+              validation: (Rule) => Rule.required(),
             },
             {
-              name: 'details',
-              title: 'Event Details',
-              type: 'string'
+              name: 'senderName',
+              title: 'Sender Name',
+              type: 'string',
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'message',
+              title: 'Message Content',
+              type: 'array',
+              of: [
+                {
+                  type: 'block',
+                  styles: [
+                    { title: 'Normal', value: 'normal' }
+                  ],
+                  marks: {
+                    decorators: [
+                      { title: 'Strong', value: 'strong' },
+                      { title: 'Emphasis', value: 'em' }
+                    ],
+                    annotations: []
+                  }
+                }
+              ],
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'timestamp',
+              title: 'Timestamp',
+              type: 'datetime',
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'gameEvent',
+              title: 'Game Event',
+              type: 'object',
+              fields: [
+                {
+                  name: 'type',
+                  title: 'Event Type',
+                  type: 'string',
+                  options: {
+                    list: [
+                      { title: 'Question', value: 'question' },
+                      { title: 'Answer', value: 'answer' },
+                      { title: 'Guess', value: 'guess' },
+                      { title: 'Elimination', value: 'elimination' },
+                      { title: 'Game Start', value: 'game_start' },
+                      { title: 'Game End', value: 'game_end' }
+                    ]
+                  }
+                },
+                {
+                  name: 'details',
+                  title: 'Event Details',
+                  type: 'string'
+                }
+              ]
             }
-          ]
+          ],
+          preview: {
+            select: {
+              senderName: 'senderName',
+              timestamp: 'timestamp',
+              text: 'message[0].children[0].text'
+            },
+            prepare({ senderName, timestamp, text }) {
+              return {
+                title: `${senderName}: ${text || 'Message'}`,
+                subtitle: timestamp ? new Date(timestamp).toLocaleString() : ''
+              };
+            }
+          }
         }
-      ],
-      preview: {
-        select: {
-          userName: 'userName',
-          timestamp: 'timestamp',
-          text: 'content[0].children[0].text'
-        },
-        prepare({ userName, timestamp, text }) {
-          return {
-            title: `${userName}: ${text || 'Message'}`,
-            subtitle: timestamp ? new Date(timestamp).toLocaleString() : ''
-          };
-        }
-      }
-    }
-  ]
-  }),
+      ]
+    }),
   ],
   preview: {
     select: {
