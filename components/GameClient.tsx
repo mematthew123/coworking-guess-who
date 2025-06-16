@@ -66,6 +66,37 @@ export default function GameClient({ gameId }: GameClientProps) {
         fetchGameData,
     } = useGameState(gameId);
 
+    const handleAbandonGame = async () => {
+        const confirmed = window.confirm(
+            'Are you sure you want to end this game? This action cannot be undone.',
+        );
+
+        if (!confirmed) return;
+
+        try {
+            setIsSubmitting(true);
+
+            const response = await fetch('/api/games/abandon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gameId }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to abandon game');
+            }
+
+            // The game state will update automatically via the useGameState hook
+            await fetchGameData();
+        } catch (error) {
+            console.error('Error abandoning game:', error);
+            alert('There was an error ending the game. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     // Step 3: Track turn changes and play notification if needed
     useEffect(() => {
         if (game?.currentTurn && previousTurnRef.current !== game.currentTurn) {
@@ -138,6 +169,22 @@ export default function GameClient({ gameId }: GameClientProps) {
     //         </div>
     //     );
     // };
+
+    // Navigate away when game ends (optional auto-redirect)
+    useEffect(() => {
+        if (
+            game &&
+            (game.status === 'completed' || game.status === 'abandoned')
+        ) {
+            // Optional: Add a delay before redirecting to show the game over screen
+            const timer = setTimeout(() => {
+                // Uncomment the next line to enable auto-redirect after 5 seconds
+                // router.push('/games');
+            }, 5000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [game, router]);
 
     const handleToggleMember = async (memberId: string) => {
         if (!isMyTurn || isSubmitting) return;
@@ -325,6 +372,110 @@ export default function GameClient({ gameId }: GameClientProps) {
         );
     }
 
+    // Game Over Screen
+    if (game.status === 'completed' || game.status === 'abandoned') {
+        const isWinner = game.winner === sanityUserId;
+        const opponentName =
+            game.playerOne._id === sanityUserId
+                ? game.playerTwo.name
+                : game.playerOne.name;
+
+        return (
+            <div className='container mx-auto p-4'>
+                <div className='max-w-2xl mx-auto'>
+                    <div className='bg-white rounded-lg shadow-lg p-8 text-center'>
+                        <h1 className='text-3xl font-bold mb-6'>
+                            {game.status === 'completed'
+                                ? 'Game Over!'
+                                : 'Game Ended'}
+                        </h1>
+
+                        {game.status === 'completed' && (
+                            <>
+                                {isWinner ? (
+                                    <div className='mb-6'>
+                                        <div className='text-6xl mb-4'>🎉</div>
+                                        <h2 className='text-2xl font-semibold text-green-600 mb-2'>
+                                            Congratulations!
+                                        </h2>
+                                        <p className='text-gray-700'>
+                                            You correctly guessed your
+                                            opponent&apos;s character!
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className='mb-6'>
+                                        <div className='text-6xl mb-4'>😔</div>
+                                        <h2 className='text-2xl font-semibold text-red-600 mb-2'>
+                                            Better luck next time!
+                                        </h2>
+                                        <p className='text-gray-700'>
+                                            {opponentName} guessed your
+                                            character correctly.
+                                        </p>
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {game.status === 'abandoned' && (
+                            <div className='mb-6'>
+                                <div className='text-6xl mb-4'>🚪</div>
+                                <p className='text-gray-700 text-lg'>
+                                    This game was ended early.
+                                </p>
+                            </div>
+                        )}
+
+                        <div className='bg-gray-50 rounded p-4 mb-6'>
+                            <div className='grid grid-cols-2 gap-4 text-sm'>
+                                <div>
+                                    <span className='text-gray-600'>
+                                        Started:
+                                    </span>
+                                    <p className='font-medium'>
+                                        {game.startedAt
+                                            ? new Date(
+                                                  game.startedAt,
+                                              ).toLocaleString()
+                                            : 'Unknown'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className='text-gray-600'>
+                                        Ended:
+                                    </span>
+                                    <p className='font-medium'>
+                                        {game.endedAt
+                                            ? new Date(
+                                                  game.endedAt,
+                                              ).toLocaleString()
+                                            : 'Just now'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className='flex gap-4 justify-center'>
+                            <button
+                                onClick={() => router.push('/games/new')}
+                                className='bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors'
+                            >
+                                Find New Opponent
+                            </button>
+                            <button
+                                onClick={() => router.push('/')}
+                                className='bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors'
+                            >
+                                Back to Home
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             {/* Include SanityLive to enable real-time updates */}
@@ -332,11 +483,18 @@ export default function GameClient({ gameId }: GameClientProps) {
 
             <div className='container mx-auto p-4'>
                 <div className='mb-6'>
-                {/* Debug info - only show in development mode  add && <TurnDebugInfo />*/}
-                    {process.env.NODE_ENV !== 'production' }
+                    {/* Debug info - only show in development mode  add && <TurnDebugInfo />*/}
+                    {process.env.NODE_ENV !== 'production'}
                     <h1 className='text-2xl font-bold text-gray-900'>
                         {game.playerOne.name} vs {game.playerTwo.name}
                     </h1>
+                    <button
+                        onClick={handleAbandonGame}
+                        disabled={isSubmitting}
+                        className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+                    >
+                        End Game
+                    </button>
 
                     {/* {process.env.NODE_ENV !== 'production' && (
                         <button
@@ -556,7 +714,7 @@ export default function GameClient({ gameId }: GameClientProps) {
             <h1 className='text-2xl font-bold text-gray-900 mb-4 mt-8'>
                 Game Chat
             </h1>
-    
+
             {/* Single GameChat instance - completely outside */}
             {game && sanityUserId && (
                 <GameChat

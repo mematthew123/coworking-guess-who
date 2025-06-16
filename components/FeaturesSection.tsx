@@ -143,6 +143,15 @@ export const FeaturesSection = () => {
             highlight: 'Most Popular',
         },
         {
+            icon: '💬',
+            title: 'Live in-game Chat',
+            description:
+                'Talk strategy, banter, and build camaraderie with integrated live chat during games',
+            bgColor: 'bg-purple-100',
+            borderGradient: 'from-purple-400 to-purple-600',
+            delay: 0.1,
+        },
+        {
             icon: '👥',
             title: 'Dynamic Character Selection',
             description:
