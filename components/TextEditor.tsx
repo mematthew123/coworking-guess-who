@@ -419,6 +419,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
 // Main Chat Editor Component
 const GameChatEditor = () => {
+  const [editorKey, setEditorKey] = useState(0);
   const [messages, setMessages] = useState<Array<{
     id: number;
     user: string;
@@ -465,6 +466,7 @@ const GameChatEditor = () => {
       };
       setMessages([...messages, newMessage]);
       setCurrentMessage([]);
+      setEditorKey(editorKey + 1); // Reset editor
     }
   };
 
@@ -499,6 +501,7 @@ const GameChatEditor = () => {
       {/* Editor Area */}
       <div className="border-t border-gray-700">
         <EditorProvider
+          key={editorKey}
           initialConfig={{
             schemaDefinition: gameChatSchema,
             initialValue: currentMessage
