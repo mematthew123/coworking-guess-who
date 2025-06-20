@@ -87,8 +87,8 @@ export default function GameClient({ gameId }: GameClientProps) {
                 throw new Error(errorData.error || 'Failed to abandon game');
             }
 
-            // The game state will update automatically via the useGameState hook
-            await fetchGameData();
+            // The real-time subscription will handle the update
+            // No manual fetch needed
         } catch (error) {
             console.error('Error abandoning game:', error);
             alert('There was an error ending the game. Please try again.');
@@ -236,9 +236,7 @@ export default function GameClient({ gameId }: GameClientProps) {
         try {
             setIsSubmitting(true);
             await askQuestion(categoryId, questionIndex);
-
-            // Let the SanityLive/fetchGameData handle the update
-            // No need for page reload
+            // Real-time subscription handles the update
         } catch (error) {
             console.error('Error asking question:', error);
             alert('There was an error asking the question. Please try again.');
@@ -246,60 +244,6 @@ export default function GameClient({ gameId }: GameClientProps) {
             setIsSubmitting(false);
         }
     };
-
-    // Manually refresh game data periodically when it's not your turn
-    // This serves as a backup in case the live updates miss something
-    useEffect(() => {
-        if (!gameId || !game || isMyTurn) return;
-
-        const refreshInterval = setInterval(() => {
-            fetchGameData();
-        }, 30000); // Check every 30 seconds as a backup
-
-        return () => clearInterval(refreshInterval);
-    }, [gameId, game, isMyTurn, fetchGameData]);
-
-    // Enhanced TurnIndicator component
-    // const TurnIndicator = () => {
-    //     if (!game) return null;
-
-    //     const opponentName =
-    //         game.playerOne._id === sanityUserId
-    //             ? game.playerTwo.name
-    //             : game.playerOne.name;
-
-    //     return (
-    //         <div
-    //             className={`p-4 rounded-lg mb-4 ${
-    //                 isMyTurn
-    //                     ? 'bg-blue-100 border-l-4 border-blue-500'
-    //                     : 'bg-gray-100 border-l-4 border-gray-500'
-    //             }`}
-    //         >
-    //             <div className='flex items-center'>
-    //                 <div
-    //                     className={`w-3 h-3 rounded-full mr-3 ${
-    //                         isMyTurn
-    //                             ? 'bg-blue-500 animate-pulse'
-    //                             : 'bg-gray-500'
-    //                     }`}
-    //                 ></div>
-
-    //                 <h3 className='font-medium text-lg'>
-    //                     {isMyTurn
-    //                         ? "It's Your Turn!"
-    //                         : `Waiting for ${opponentName}`}
-    //                 </h3>
-    //             </div>
-
-    //             {isMyTurn && (
-    //                 <p className='mt-2 text-blue-700 text-sm'>
-    //                     Choose a question or make a guess to continue the game
-    //                 </p>
-    //             )}
-    //         </div>
-    //     );
-    // };
 
     // Handle loading states
     const loading = initialLoading || gameLoading || !isLoaded;
@@ -510,6 +454,7 @@ export default function GameClient({ gameId }: GameClientProps) {
                         lastUpdated={lastUpdate || game._updatedAt}
                         isMyTurn={isMyTurn}
                         isRealTimeActive={true} // Always true with SanityLive
+                        onRefresh={fetchGameData}
                     />
 
                     {/* New Turn Indicator */}

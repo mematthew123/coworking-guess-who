@@ -2,35 +2,40 @@
 import { useState, useEffect } from 'react';
 
 interface RealtimeIndicatorProps {
-  lastUpdated?: string | Date; // Change type to accept both string and Date
+  lastUpdated?: string | Date;
   isMyTurn: boolean;
   isRealTimeActive?: boolean;
+  onRefresh?: () => void; // Add callback for refresh
 }
 
 export default function RealtimeIndicator({ 
   lastUpdated, 
   isMyTurn,
-  isRealTimeActive = true
+  isRealTimeActive = true,
+  onRefresh
 }: RealtimeIndicatorProps) {
   const [countdown, setCountdown] = useState(30);
   
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
-        if (prev <= 1) return 30; // Reset to 30 seconds for auto-refresh
+        if (prev <= 1) {
+          // Trigger refresh callback instead of reloading
+          if (onRefresh) onRefresh();
+          return 30;
+        }
         return prev - 1;
       });
     }, 1000);
     
     return () => clearInterval(timer);
-  }, []);
+  }, [onRefresh]);
   
   // Reset countdown when new data comes in
   useEffect(() => {
     setCountdown(30);
   }, [lastUpdated]);
   
-  // Handle both string and Date types
   const lastUpdateTime = lastUpdated 
     ? lastUpdated instanceof Date
       ? lastUpdated.toLocaleTimeString()
@@ -59,10 +64,10 @@ export default function RealtimeIndicator({
             : 'Attempting to reconnect...'}
         </span>
         <button 
-          onClick={() => window.location.reload()}
+          onClick={() => onRefresh && onRefresh()}
           className="ml-2 text-xs underline text-blue-500"
         >
-          Refresh now
+          Refresh data
         </button>
       </div>
       
