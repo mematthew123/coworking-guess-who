@@ -6,6 +6,7 @@ import { Member, Game, QuestionCategory, Question, GameMove } from '@/sanity.typ
 
 // Base expanded member reference
 export interface ExpandedMemberReference {
+  clerkId: string;
   _id: string;
   name?: string;
 }

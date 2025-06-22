@@ -16,6 +16,15 @@ export default function useGameState(gameId: string) {
     const [error, setError] = useState<string | null>(null);
     const subscriptionRef = useRef<any>(null);
 
+    // Helper to get current user's Sanity ID
+    const getCurrentUserId = useCallback((gameData: ExpandedGame) => {
+        if (!user?.id) return null;
+        
+        if (gameData.playerOne.clerkId === user.id) return gameData.playerOne._id;
+        if (gameData.playerTwo.clerkId === user.id) return gameData.playerTwo._id;
+        return null;
+    }, [user?.id]);
+
     // Fetch game data function
     const fetchGameData = useCallback(async () => {
         if (!gameId) return;
@@ -48,13 +57,8 @@ export default function useGameState(gameId: string) {
             setBoardMembers(gameData.boardMembers || []);
             
             // Update turn status
-            if (user?.id) {
-                const currentUserId = 
-                    gameData.playerOne.clerkId === user.id ? gameData.playerOne._id :
-                    gameData.playerTwo.clerkId === user.id ? gameData.playerTwo._id : null;
-                
-                setIsMyTurn(gameData.currentTurn === currentUserId);
-            }
+            const currentUserId = getCurrentUserId(gameData);
+            setIsMyTurn(gameData.currentTurn === currentUserId);
 
             // Process eliminated members from moves
             const eliminated = new Set<string>();
@@ -82,7 +86,7 @@ export default function useGameState(gameId: string) {
             setError('Failed to load game');
             setLoading(false);
         }
-    }, [gameId, user?.id]);
+    }, [gameId, getCurrentUserId]);
 
     // Set up real-time subscription
     useEffect(() => {
@@ -118,14 +122,43 @@ export default function useGameState(gameId: string) {
         };
     }, [gameId, fetchGameData]);
 
-    // Ask question function
+    // Ask question function with fresh data check
     const askQuestion = async (categoryId: string, questionIndex: number) => {
-        if (!game || !isMyTurn) {
-            console.log('Not your turn');
+        if (!game) {
+            console.error('No game data');
             return;
         }
 
+        // Fetch fresh game data before making the move
         try {
+            const freshGameData = await client.fetch(
+                `*[_type == "game" && _id == $gameId][0]{
+                    currentTurn,
+                    playerOne->{_id, clerkId},
+                    playerTwo->{_id, clerkId},
+                    status
+                }`,
+                { gameId }
+            );
+
+            if (!freshGameData) {
+                throw new Error('Game not found');
+            }
+
+            if (freshGameData.status !== 'active') {
+                throw new Error('Game is no longer active');
+            }
+
+            const currentUserId = getCurrentUserId(freshGameData);
+            const isActuallyMyTurn = freshGameData.currentTurn === currentUserId;
+
+            if (!isActuallyMyTurn) {
+                console.log('Not your turn after fresh data check');
+                // Update local state to reflect the correct turn
+                setIsMyTurn(false);
+                throw new Error('Not your turn');
+            }
+
             const response = await fetch('/api/games/ask-question', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -149,14 +182,43 @@ export default function useGameState(gameId: string) {
         }
     };
 
-    // Make guess function
+    // Make guess function with fresh data check
     const makeGuess = async (memberId: string) => {
-        if (!game || !isMyTurn) {
-            console.log('Not your turn');
+        if (!game) {
+            console.error('No game data');
             return false;
         }
 
         try {
+            // Fetch fresh game data before making the guess
+            const freshGameData = await client.fetch(
+                `*[_type == "game" && _id == $gameId][0]{
+                    currentTurn,
+                    playerOne->{_id, clerkId},
+                    playerTwo->{_id, clerkId},
+                    status
+                }`,
+                { gameId }
+            );
+
+            if (!freshGameData) {
+                throw new Error('Game not found');
+            }
+
+            if (freshGameData.status !== 'active') {
+                throw new Error('Game is no longer active');
+            }
+
+            const currentUserId = getCurrentUserId(freshGameData);
+            const isActuallyMyTurn = freshGameData.currentTurn === currentUserId;
+
+            if (!isActuallyMyTurn) {
+                console.log('Not your turn after fresh data check');
+                // Update local state to reflect the correct turn
+                setIsMyTurn(false);
+                throw new Error('Not your turn');
+            }
+
             const response = await fetch('/api/games/make-guess', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
