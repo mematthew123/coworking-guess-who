@@ -8,7 +8,9 @@ import {
     ExpandedQuestionCategory,
 } from '@/types/groqResults';
 import { useUser } from '@clerk/nextjs';
-import { calculateEliminatedFromHistory } from '@/lib/question-utils';
+import { 
+    calculateEliminatedFromHistory 
+} from '@/lib/question-utils';
 
 export default function useGameState(gameId: string) {
     const [game, setGame] = useState<ExpandedGame | null>(null);
@@ -20,11 +22,9 @@ export default function useGameState(gameId: string) {
     const [isMyTurn, setIsMyTurn] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [connectionStatus, setConnectionStatus] = useState<
-        'disconnected' | 'connecting' | 'connected'
-    >('disconnected');
+    const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-
+    
     const { user } = useUser();
     const subscriptionRef = useRef<any>(null);
     const sanityUserIdRef = useRef<string | null>(null);
@@ -87,20 +87,14 @@ export default function useGameState(gameId: string) {
             setIsMyTurn(myTurn);
 
             // Play notification sound if it just became our turn
-            if (
-                myTurn &&
-                previousTurnRef.current !== null &&
-                previousTurnRef.current !== sanityUserId
-            ) {
+            if (myTurn && previousTurnRef.current !== null && previousTurnRef.current !== sanityUserId) {
                 playNotificationSound();
             }
             previousTurnRef.current = gameData.currentTurn ?? null;
 
             // Fetch question categories if not already loaded
             if (questionCategories.length === 0) {
-                const categories = await client.fetch<
-                    ExpandedQuestionCategory[]
-                >(`
+                const categories = await client.fetch<ExpandedQuestionCategory[]>(`
                     *[_type == "questionCategory"]{
                         _id, 
                         title, 
@@ -117,9 +111,7 @@ export default function useGameState(gameId: string) {
                 const eliminated = calculateEliminatedFromHistory(
                     gameData.moves,
                     gameData.boardMembers,
-                    questionCategories.length > 0
-                        ? questionCategories
-                        : await client.fetch<ExpandedQuestionCategory[]>(`
+                    questionCategories.length > 0 ? questionCategories : await client.fetch<ExpandedQuestionCategory[]>(`
                         *[_type == "questionCategory"]{
                             _id, 
                             title, 
@@ -128,7 +120,7 @@ export default function useGameState(gameId: string) {
                             questions[]
                         }
                     `),
-                    sanityUserId,
+                    sanityUserId
                 );
                 setEliminatedIds(eliminated);
             }
@@ -140,7 +132,7 @@ export default function useGameState(gameId: string) {
             setError('Failed to load game data');
             setLoading(false);
         }
-    }, [user?.id, gameId, questionCategories]);
+    }, [user?.id, gameId, questionCategories.length]);
 
     // Set up real-time subscription
     useEffect(() => {
@@ -150,10 +142,7 @@ export default function useGameState(gameId: string) {
 
         async function setupSubscription() {
             try {
-                console.log(
-                    '[RT] Setting up real-time subscription for game:',
-                    gameId,
-                );
+                console.log('[RT] Setting up real-time subscription for game:', gameId);
                 setConnectionStatus('connecting');
 
                 // Initial fetch
@@ -164,31 +153,27 @@ export default function useGameState(gameId: string) {
                 const params = { gameId };
 
                 subscriptionRef.current = browserClient
-                    .listen(query, params, {
-                        includeResult: true,
-                        includePreviousRevision: false,
-                        visibility: 'query',
-                        events: ['welcome', 'mutation', 'reconnect'],
-                    })
+                    .listen(
+                        query, 
+                        params,
+                        {
+                            includeResult: true,
+                            includePreviousRevision: false,
+                            visibility: 'query',
+                            events: ['welcome', 'mutation', 'reconnect'],
+                        }
+                    )
                     .subscribe({
                         next: (update) => {
-                            console.log(
-                                '[RT] Game update received:',
-                                update.type,
-                                new Date().toISOString(),
-                            );
-
+                            console.log('[RT] Game update received:', update.type, new Date().toISOString());
+                            
                             if (update.type === 'welcome') {
                                 setConnectionStatus('connected');
-                                console.log(
-                                    '[RT] Connected to real-time updates',
-                                );
+                                console.log('[RT] Connected to real-time updates');
                             }
 
                             if (update.type === 'reconnect') {
-                                console.log(
-                                    '[RT] Reconnected to real-time updates',
-                                );
+                                console.log('[RT] Reconnected to real-time updates');
                                 // Refetch data on reconnect to ensure consistency
                                 fetchGameData();
                             }
@@ -203,7 +188,7 @@ export default function useGameState(gameId: string) {
                             console.error('[RT] Subscription error:', err);
                             setConnectionStatus('disconnected');
                             setError('Real-time connection lost. Retrying...');
-
+                            
                             // Retry connection after a delay
                             setTimeout(() => {
                                 if (isSubscribed) {
@@ -212,6 +197,7 @@ export default function useGameState(gameId: string) {
                             }, 5000);
                         },
                     });
+
             } catch (error) {
                 console.error('[RT] Error setting up subscription:', error);
                 setConnectionStatus('disconnected');
@@ -286,7 +272,7 @@ export default function useGameState(gameId: string) {
             }
 
             const data = await response.json();
-
+            
             // Return the result for the caller to handle
             return data;
         } catch (err) {
@@ -315,7 +301,7 @@ export default function useGameState(gameId: string) {
 function playNotificationSound() {
     try {
         const audio = new Audio('/sounds/turn-notification.mp3');
-        audio.play().catch((e) => console.log('Audio play error:', e));
+        audio.play().catch(e => console.log('Audio play error:', e));
     } catch (e) {
         console.log('Audio error:', e);
     }
