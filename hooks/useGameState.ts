@@ -1,16 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // hooks/useGameState.ts
-import { useState, useEffect, useCallback } from 'react';
-import { client } from '@/sanity/lib/client';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { client, browserClient } from '@/sanity/lib/client';
 import {
     ExpandedGame,
     ExpandedMember,
     ExpandedQuestionCategory,
 } from '@/types/groqResults';
 import { useUser } from '@clerk/nextjs';
-import { 
-    resolveQuestionAnswer, 
-    calculateEliminatedFromHistory 
-} from '@/lib/question-utils';
+import { calculateEliminatedFromHistory } from '@/lib/question-utils';
 
 export default function useGameState(gameId: string) {
     const [game, setGame] = useState<ExpandedGame | null>(null);
@@ -22,20 +20,29 @@ export default function useGameState(gameId: string) {
     const [isMyTurn, setIsMyTurn] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [connectionStatus, setConnectionStatus] = useState<
+        'disconnected' | 'connecting' | 'connected'
+    >('disconnected');
+    const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
     const { user } = useUser();
+    const subscriptionRef = useRef<any>(null);
+    const sanityUserIdRef = useRef<string | null>(null);
+    const previousTurnRef = useRef<string | null>(null);
 
     const fetchGameData = useCallback(async () => {
         try {
             setLoading(true);
 
             // Get the Sanity member ID for the current user
-            let sanityUserId = null;
-            if (user?.id) {
+            let sanityUserId = sanityUserIdRef.current;
+            if (user?.id && !sanityUserId) {
                 const memberDoc = await client.fetch(
                     `*[_type == "member" && clerkId == $clerkId][0]._id`,
                     { clerkId: user.id },
                 );
                 sanityUserId = memberDoc;
+                sanityUserIdRef.current = sanityUserId;
             }
 
             // Fetch game data
@@ -43,6 +50,7 @@ export default function useGameState(gameId: string) {
                 `
                 *[_type == "game" && _id == $gameId][0]{
                   ...,
+                  _updatedAt,
                   playerOne->{_id, name},
                   playerTwo->{_id, name},
                   playerOneTarget->{_id},
@@ -72,45 +80,157 @@ export default function useGameState(gameId: string) {
 
             setGame(gameData);
             setBoardMembers(gameData.boardMembers || []);
+            setLastUpdate(new Date());
 
             // Check if it's our turn
-            setIsMyTurn(sanityUserId === gameData.currentTurn);
+            const myTurn = sanityUserId === gameData.currentTurn;
+            setIsMyTurn(myTurn);
 
-            // Fetch question categories
-            const categories = await client.fetch<ExpandedQuestionCategory[]>(`
-                *[_type == "questionCategory"]{
-                    _id, 
-                    title, 
-                    icon, 
-                    description,
-                    questions[]
-                }
-            `);
+            // Play notification sound if it just became our turn
+            if (
+                myTurn &&
+                previousTurnRef.current !== null &&
+                previousTurnRef.current !== sanityUserId
+            ) {
+                playNotificationSound();
+            }
+            previousTurnRef.current = gameData.currentTurn ?? null;
 
-            setQuestionCategories(categories);
+            // Fetch question categories if not already loaded
+            if (questionCategories.length === 0) {
+                const categories = await client.fetch<
+                    ExpandedQuestionCategory[]
+                >(`
+                    *[_type == "questionCategory"]{
+                        _id, 
+                        title, 
+                        icon, 
+                        description,
+                        questions[]
+                    }
+                `);
+                setQuestionCategories(categories);
+            }
 
             // Calculate eliminated members based on game history
             if (gameData.moves && gameData.moves.length > 0 && sanityUserId) {
                 const eliminated = calculateEliminatedFromHistory(
                     gameData.moves,
                     gameData.boardMembers,
-                    categories,
-                    sanityUserId
+                    questionCategories.length > 0
+                        ? questionCategories
+                        : await client.fetch<ExpandedQuestionCategory[]>(`
+                        *[_type == "questionCategory"]{
+                            _id, 
+                            title, 
+                            icon, 
+                            description,
+                            questions[]
+                        }
+                    `),
+                    sanityUserId,
                 );
                 setEliminatedIds(eliminated);
             }
 
             setLoading(false);
+            setError(null);
         } catch (err) {
             console.error('Error fetching game data:', err);
             setError('Failed to load game data');
             setLoading(false);
         }
-    }, [user?.id, gameId]);
+    }, [user?.id, gameId, questionCategories]);
 
+    // Set up real-time subscription
     useEffect(() => {
-        fetchGameData();
-    }, [fetchGameData]);
+        if (!gameId) return;
+
+        let isSubscribed = true;
+
+        async function setupSubscription() {
+            try {
+                console.log(
+                    '[RT] Setting up real-time subscription for game:',
+                    gameId,
+                );
+                setConnectionStatus('connecting');
+
+                // Initial fetch
+                await fetchGameData();
+
+                // Create subscription
+                const query = `*[_type == "game" && _id == $gameId]`;
+                const params = { gameId };
+
+                subscriptionRef.current = browserClient
+                    .listen(query, params, {
+                        includeResult: true,
+                        includePreviousRevision: false,
+                        visibility: 'query',
+                        events: ['welcome', 'mutation', 'reconnect'],
+                    })
+                    .subscribe({
+                        next: (update) => {
+                            console.log(
+                                '[RT] Game update received:',
+                                update.type,
+                                new Date().toISOString(),
+                            );
+
+                            if (update.type === 'welcome') {
+                                setConnectionStatus('connected');
+                                console.log(
+                                    '[RT] Connected to real-time updates',
+                                );
+                            }
+
+                            if (update.type === 'reconnect') {
+                                console.log(
+                                    '[RT] Reconnected to real-time updates',
+                                );
+                                // Refetch data on reconnect to ensure consistency
+                                fetchGameData();
+                            }
+
+                            if (update.type === 'mutation' && update.result) {
+                                console.log('[RT] Game mutation detected');
+                                // Instead of manually updating state, refetch for consistency
+                                fetchGameData();
+                            }
+                        },
+                        error: (err) => {
+                            console.error('[RT] Subscription error:', err);
+                            setConnectionStatus('disconnected');
+                            setError('Real-time connection lost. Retrying...');
+
+                            // Retry connection after a delay
+                            setTimeout(() => {
+                                if (isSubscribed) {
+                                    setupSubscription();
+                                }
+                            }, 5000);
+                        },
+                    });
+            } catch (error) {
+                console.error('[RT] Error setting up subscription:', error);
+                setConnectionStatus('disconnected');
+            }
+        }
+
+        setupSubscription();
+
+        // Cleanup
+        return () => {
+            isSubscribed = false;
+            if (subscriptionRef.current) {
+                console.log('[RT] Cleaning up subscription');
+                subscriptionRef.current.unsubscribe();
+                subscriptionRef.current = null;
+            }
+            setConnectionStatus('disconnected');
+        };
+    }, [gameId, fetchGameData]);
 
     const askQuestion = async (categoryId: string, questionIndex: number) => {
         if (!game || !isMyTurn) {
@@ -132,52 +252,22 @@ export default function useGameState(gameId: string) {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('Error asking question:', errorData);
-                return;
+                throw new Error(errorData.error || 'Failed to ask question');
             }
 
-            const data = await response.json();
-
-            // Update local state
+            // Real-time subscription will handle the update
+            // Just update local turn state optimistically
             setIsMyTurn(false);
-
-            // Calculate newly eliminated members
-            if (data.move && data.move.answer !== undefined) {
-                const category = questionCategories.find(c => c._id === categoryId);
-                const question = category?.questions?.[questionIndex];
-
-                if (question) {
-                    // Get currently remaining members
-                    const remainingMembers = boardMembers.filter(
-                        m => !eliminatedIds.includes(m._id)
-                    );
-
-                    // Find members to eliminate based on the answer
-                    const newEliminatedIds = remainingMembers
-                        .filter(member => {
-                            const memberAnswer = resolveQuestionAnswer(question, member);
-                            return memberAnswer !== data.move.answer;
-                        })
-                        .map(m => m._id);
-
-                    // Update eliminated list
-                    setEliminatedIds([...eliminatedIds, ...newEliminatedIds]);
-                }
-            }
-
-            // Refresh game data after a short delay
-            setTimeout(() => {
-                fetchGameData();
-            }, 1000);
-
         } catch (err) {
-            console.error('Error asking question:', err);
+            console.error('Error in askQuestion:', err);
+            throw err;
         }
     };
 
-    const makeGuess = async (memberId: string) => {
+    const makeGuess = async (targetId: string) => {
         if (!game || !isMyTurn) {
             console.log('Not your turn');
-            return false;
+            return;
         }
 
         try {
@@ -186,44 +276,27 @@ export default function useGameState(gameId: string) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     gameId,
-                    memberId,
+                    targetId,
                 }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Error making guess:', errorData);
-                return false;
+                throw new Error(errorData.error || 'Failed to make guess');
             }
 
             const data = await response.json();
 
-            // Update local state
-            if (data.gameOver) {
-                setGame((prev) =>
-                    prev
-                        ? { ...prev, status: 'completed', winner: data.winner }
-                        : null,
-                );
-            } else {
-                setIsMyTurn(false);
-            }
-
-            // Refresh game data
-            setTimeout(() => {
-                fetchGameData();
-            }, 1000);
-
-            return data.correct;
+            // Return the result for the caller to handle
+            return data;
         } catch (err) {
-            console.error('Error making guess:', err);
-            return false;
+            console.error('Error in makeGuess:', err);
+            throw err;
         }
     };
 
     return {
         game,
-        setGame,
         boardMembers,
         eliminatedIds,
         setEliminatedIds,
@@ -234,5 +307,16 @@ export default function useGameState(gameId: string) {
         askQuestion,
         makeGuess,
         fetchGameData,
+        connectionStatus,
+        lastUpdate,
     };
+}
+
+function playNotificationSound() {
+    try {
+        const audio = new Audio('/sounds/turn-notification.mp3');
+        audio.play().catch((e) => console.log('Audio play error:', e));
+    } catch (e) {
+        console.log('Audio error:', e);
+    }
 }
