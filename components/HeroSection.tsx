@@ -1,4 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
+
 'use client';
 
 import { useRef } from 'react';
@@ -45,11 +46,11 @@ const HeroSection = () => {
     });
 
     return (
-        <section className='relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50'>
+        <section className='relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-[var(--color-gold-50)] via-[var(--color-sidecar-cream)] to-[var(--color-gold-100)]'>
             {/* Multi-layer background effects */}
             <div className='absolute inset-0'>
-                <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-transparent to-transparent opacity-50' />
-                <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-100 via-transparent to-transparent opacity-50' />
+                <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[var(--color-gold-100)] via-transparent to-transparent opacity-40' />
+                <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-[var(--color-gold-200)] via-transparent to-transparent opacity-30' />
             </div>
 
             {/* Particle system */}
@@ -64,11 +65,11 @@ const HeroSection = () => {
                     {/* Floating Badge */}
                     <div
                         ref={badgeRef}
-                        className='inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 text-gray-700 text-sm font-medium mb-8 shadow-lg backdrop-blur-sm border border-white/50'
+                        className='inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-[var(--color-gold-100)] to-[var(--color-gold-200)] text-[var(--color-sidecar-black)] text-sm font-medium mb-8 shadow-lg backdrop-blur-sm border border-[var(--color-gold-300)]/30'
                     >
                         <span className='mr-2 text-lg animate-pulse'>🎯</span>
-                        <span>The Ultimate Coworking Community Game</span>
-                        <span className='ml-2 px-2 py-1 bg-green-400 text-white text-xs rounded-full animate-pulse'>
+                        <span className='font-heading'>The Ultimate Coworking Community Game</span>
+                        <span className='ml-2 px-2 py-1 bg-[var(--color-sidecar-gold)] text-[var(--color-sidecar-cream)] text-xs rounded-full animate-pulse'>
                             NEW
                         </span>
                     </div>
@@ -77,16 +78,16 @@ const HeroSection = () => {
                     <div className='relative mb-6'>
                         <h1
                             ref={titleRef}
-                            className='text-6xl md:text-7xl lg:text-8xl font-bold text-gray-900 relative z-10'
+                            className='text-6xl md:text-7xl lg:text-8xl font-heading font-bold text-[var(--color-sidecar-black)] relative z-10'
                         >
                             Guess Who? Coworking Edition
                         </h1>
-                        <div className='absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur-3xl' />
+                        <div className='absolute inset-0 bg-gradient-to-r from-[var(--color-gold-400)]/10 to-[var(--color-gold-300)]/10 blur-3xl' />
                     </div>
 
                     {/* Animated gradient text */}
                     <div className='mb-8'>
-                        <span className='text-5xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 animate-gradient'>
+                        <span className='text-5xl md:text-6xl lg:text-7xl font-script font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-gold-700)] via-[var(--color-sidecar-gold)] to-[var(--color-gold-600)] animate-fade-in'>
                             Connect • Play • Discover
                         </span>
                     </div>
@@ -94,7 +95,7 @@ const HeroSection = () => {
                     {/* Subheading */}
                     <p
                         ref={subtitleRef}
-                        className='text-xl md:text-2xl lg:text-3xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed'
+                        className='text-xl md:text-2xl lg:text-3xl text-[var(--color-sidecar-gray)] mb-12 max-w-3xl mx-auto leading-relaxed font-heading'
                     >
                         Transform your coworking space into a vibrant community
                         through interactive gameplay
@@ -110,7 +111,7 @@ const HeroSection = () => {
                                 <Link
                                     href='/games'
                                     ref={primaryButtonRef}
-                                    className='group relative px-10 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-full transform transition-all duration-300 hover:scale-110 hover:shadow-2xl overflow-hidden'
+                                    className='group relative px-10 py-5 bg-gradient-to-r from-[var(--color-sidecar-gold)] to-[var(--color-gold-600)] text-[var(--color-sidecar-cream)] font-bold rounded-full transform transition-all duration-300 hover:scale-110 hover:shadow-2xl overflow-hidden font-heading'
                                 >
                                     <span className='relative z-10 flex items-center gap-2'>
                                         Find an Opponent
@@ -118,12 +119,12 @@ const HeroSection = () => {
                                             →
                                         </span>
                                     </span>
-                                    <div className='absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+                                    <div className='absolute inset-0 bg-gradient-to-r from-[var(--color-gold-600)] to-[var(--color-gold-700)] opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
                                 </Link>
                                 <Link
                                     href='/dashboard'
                                     ref={secondaryButtonRef}
-                                    className='group px-10 py-5 bg-white/90 backdrop-blur-sm text-gray-800 font-bold rounded-full border-2 border-gray-200 transform transition-all duration-300 hover:scale-110 hover:border-purple-400 hover:shadow-xl'
+                                    className='group px-10 py-5 bg-[var(--color-sidecar-cream)]/90 backdrop-blur-sm text-[var(--color-sidecar-black)] font-bold rounded-full border-2 border-[var(--color-gold-300)] transform transition-all duration-300 hover:scale-110 hover:border-[var(--color-sidecar-gold)] hover:shadow-xl font-heading'
                                 >
                                     <span className='flex items-center gap-2'>
                                         Go to Dashboard
@@ -138,7 +139,7 @@ const HeroSection = () => {
                                 <Link
                                     href='/sign-up'
                                     ref={primaryButtonRef}
-                                    className='group relative px-10 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-full transform transition-all duration-300 hover:scale-110 hover:shadow-2xl overflow-hidden'
+                                    className='group relative px-10 py-5 bg-gradient-to-r from-[var(--color-sidecar-gold)] to-[var(--color-gold-600)] text-[var(--color-sidecar-cream)] font-bold rounded-full transform transition-all duration-300 hover:scale-110 hover:shadow-2xl overflow-hidden font-heading'
                                 >
                                     <span className='relative z-10 flex items-center gap-2'>
                                         Start Playing Now
@@ -146,12 +147,12 @@ const HeroSection = () => {
                                             →
                                         </span>
                                     </span>
-                                    <div className='absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+                                    <div className='absolute inset-0 bg-gradient-to-r from-[var(--color-gold-600)] to-[var(--color-gold-700)] opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
                                 </Link>
                                 <Link
                                     href='/sign-in'
                                     ref={secondaryButtonRef}
-                                    className='group px-10 py-5 bg-white/90 backdrop-blur-sm text-gray-800 font-bold rounded-full border-2 border-gray-200 transform transition-all duration-300 hover:scale-110 hover:border-purple-400 hover:shadow-xl'
+                                    className='group px-10 py-5 bg-[var(--color-sidecar-cream)]/90 backdrop-blur-sm text-[var(--color-sidecar-black)] font-bold rounded-full border-2 border-[var(--color-gold-300)] transform transition-all duration-300 hover:scale-110 hover:border-[var(--color-sidecar-gold)] hover:shadow-xl font-heading'
                                 >
                                     <span className='flex items-center gap-2'>
                                         Sign In

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf8f3;
+  --foreground: #1a1a1a;
 }
 
 @theme inline {
@@ -11,37 +11,128 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   
-  /* Custom color palette */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  /* The Side Car Brand Colors */
+  --color-sidecar-gold: #987654;
+  --color-sidecar-gold-light: #b89968;
+  --color-sidecar-gold-dark: #7a5d3a;
+  --color-sidecar-cream: #faf8f3;
+  --color-sidecar-white: #ffffff;
+  --color-sidecar-black: #1a1a1a;
+  --color-sidecar-gray: #666666;
   
-  --color-secondary-50: #fdf2f8;
-  --color-secondary-100: #fce7f3;
-  --color-secondary-200: #fbcfe8;
-  --color-secondary-300: #f9a8d4;
-  --color-secondary-400: #f472b6;
-  --color-secondary-500: #ec4899;
-  --color-secondary-600: #db2777;
-  --color-secondary-700: #be185d;
-  --color-secondary-800: #9d174d;
-  --color-secondary-900: #831843;
+  /* Extended Gold Palette for The Side Car */
+  --color-gold-50: #faf9f6;
+  --color-gold-100: #f5f2eb;
+  --color-gold-200: #e8dfd2;
+  --color-gold-300: #d9c9b1;
+  --color-gold-400: #c5a882;
+  --color-gold-500: #987654;
+  --color-gold-600: #7a5d3a;
+  --color-gold-700: #5d4729;
+  --color-gold-800: #4a3921;
+  --color-gold-900: #3d2f1b;
+  --color-gold-950: #211909;
   
-  --color-accent-50: #f0fdf4;
-  --color-accent-100: #dcfce7;
-  --color-accent-200: #bbf7d0;
-  --color-accent-300: #86efac;
-  --color-accent-400: #4ade80;
-  --color-accent-500: #22c55e;
-  --color-accent-600: #16a34a;
-  --color-accent-700: #15803d;
-  --color-accent-800: #166534;
-  --color-accent-900: #14532d;
+  /* Typography for The Side Car */
+  --font-heading: 'Playfair Display', 'Georgia', serif;
+  --font-script: 'Dancing Script', cursive;
+  
+  /* Custom spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 2rem;
+  --spacing-lg: 3rem;
+  --spacing-xl: 5rem;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  
+  /* Updated Primary Colors to Gold */
+  --color-primary-50: var(--color-gold-50);
+  --color-primary-100: var(--color-gold-100);
+  --color-primary-200: var(--color-gold-200);
+  --color-primary-300: var(--color-gold-300);
+  --color-primary-400: var(--color-gold-400);
+  --color-primary-500: var(--color-gold-500);
+  --color-primary-600: var(--color-gold-600);
+  --color-primary-700: var(--color-gold-700);
+  --color-primary-800: var(--color-gold-800);
+  --color-primary-900: var(--color-gold-900);
+  
+  /* Neutral Colors */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Base Styles */
+body {
+  font-family: var(--font-sans);
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-sidecar-black);
+}
+
+/* Custom Classes for The Side Car */
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-script {
+  font-family: var(--font-script);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Utility Animations */
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out;
+}
+
+.animate-rotate {
+  animation: rotate 30s linear infinite;
 }
