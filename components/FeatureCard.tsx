@@ -1,180 +1,131 @@
-'use client';
-import { useRef, useEffect } from "react";
-import gsap from "gsap";
+import { useRef, useEffect } from 'react';
+import { gsap } from 'gsap';
 
-type Feature = {
-  icon: string;
-  title: string;
-  description: string;
-  bgColor: string;
-  borderGradient: string;
-  delay: number;
-  highlight?: string;
-};
-
-export const FeatureCard = ({ feature }: { feature: Feature; index: number }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const iconRef = useRef<HTMLDivElement>(null);
-  const borderRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const highlightRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!cardRef.current || !iconRef.current || !borderRef.current) return;
-
-    // Set initial states with enhanced 3D transforms
-    gsap.set(cardRef.current, {
-      transformPerspective: 1000,
-      transformStyle: 'preserve-3d',
-    });
-
-    // Create enhanced hover animation timeline
-    const tl = gsap.timeline({ paused: true });
-    
-    tl.to(cardRef.current, {
-      rotateY: 8,
-      rotateX: -8,
-      scale: 1.08,
-      z: 50,
-      duration: 0.4,
-      ease: 'power2.out',
-    })
-    .to(iconRef.current, {
-      scale: 1.3,
-      rotation: 360,
-      duration: 0.6,
-      ease: 'back.out(1.7)',
-    }, 0)
-    .to(borderRef.current, {
-      scaleX: 1,
-      duration: 0.4,
-      ease: 'power2.out',
-    }, 0)
-    .to(contentRef.current, {
-      y: -5,
-      duration: 0.4,
-      ease: 'power2.out',
-    }, 0);
-
-    // Add enhanced hover listeners
-    const handleMouseEnter = () => {
-      tl.play();
-      // Add subtle glow effect
-      gsap.to(cardRef.current, {
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 30px rgba(59, 130, 246, 0.15)',
-        duration: 0.3,
-      });
+interface FeatureProps {
+    feature: {
+        icon: string;
+        title: string;
+        description: string;
+        bgColor: string;
+        borderGradient: string;
+        delay: number;
+        highlight?: string;
     };
+    index: number;
+}
 
-    const handleMouseLeave = () => {
-      tl.reverse();
-      gsap.to(cardRef.current, {
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        duration: 0.3,
-      });
-    };
+export const FeatureCard = ({ feature }: FeatureProps) => {
+    const cardRef = useRef<HTMLDivElement>(null);
+    const iconRef = useRef<HTMLDivElement>(null);
 
-    cardRef.current.addEventListener('mouseenter', handleMouseEnter);
-    cardRef.current.addEventListener('mouseleave', handleMouseLeave);
+    useEffect(() => {
+        if (!cardRef.current || !iconRef.current) return;
 
-    // Enhanced mouse move effect with magnetic attraction
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!cardRef.current) return;
-      
-      const rect = cardRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      
-      const rotateX = ((y - centerY) / centerY) * 15;
-      const rotateY = ((x - centerX) / centerX) * 15;
-      
-      gsap.to(cardRef.current, {
-        rotateX: -rotateX,
-        rotateY: rotateY,
-        duration: 0.3,
-        ease: 'power2.out',
-      });
+        // Hover animation
+        const card = cardRef.current;
+        const icon = iconRef.current;
 
-      // Magnetic effect for icon
-      gsap.to(iconRef.current, {
-        x: (x - centerX) * 0.1,
-        y: (y - centerY) * 0.1,
-        duration: 0.3,
-        ease: 'power2.out',
-      });
-    };
+        const handleMouseEnter = () => {
+            gsap.to(card, {
+                y: -8,
+                duration: 0.3,
+                ease: 'power2.out',
+            });
+            
+            gsap.to(icon, {
+                scale: 1.2,
+                rotate: 15,
+                duration: 0.3,
+                ease: 'back.out(1.7)',
+            });
+        };
 
-    const handleMouseLeaveCard = () => {
-      gsap.to(cardRef.current, {
-        rotateX: 0,
-        rotateY: 0,
-        duration: 0.5,
-        ease: 'power2.out',
-      });
+        const handleMouseLeave = () => {
+            gsap.to(card, {
+                y: 0,
+                duration: 0.3,
+                ease: 'power2.out',
+            });
+            
+            gsap.to(icon, {
+                scale: 1,
+                rotate: 0,
+                duration: 0.3,
+                ease: 'power2.out',
+            });
+        };
 
-      gsap.to(iconRef.current, {
-        x: 0,
-        y: 0,
-        duration: 0.5,
-        ease: 'power2.out',
-      });
-    };
+        card.addEventListener('mouseenter', handleMouseEnter);
+        card.addEventListener('mouseleave', handleMouseLeave);
 
-    cardRef.current.addEventListener('mousemove', handleMouseMove);
-    cardRef.current.addEventListener('mouseleave', handleMouseLeaveCard);
+        // Initial animation
+        gsap.fromTo(
+            card,
+            {
+                y: 50,
+                opacity: 0,
+                rotateY: -45,
+            },
+            {
+                y: 0,
+                opacity: 1,
+                rotateY: 0,
+                duration: 0.8,
+                delay: feature.delay,
+                ease: 'power3.out',
+            }
+        );
 
-    return () => {
-      if (cardRef.current) {
-        cardRef.current.removeEventListener('mouseenter', handleMouseEnter);
-        cardRef.current.removeEventListener('mouseleave', handleMouseLeave);
-        cardRef.current.removeEventListener('mousemove', handleMouseMove);
-        cardRef.current.removeEventListener('mouseleave', handleMouseLeaveCard);
-      }
-    };
-  }, []);
+        return () => {
+            card.removeEventListener('mouseenter', handleMouseEnter);
+            card.removeEventListener('mouseleave', handleMouseLeave);
+        };
+    }, [feature.delay]);
 
-  return (
-    <div
-      ref={cardRef}
-      className="feature-card group relative p-6 rounded-2xl bg-white/80 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-100 overflow-hidden"
-      style={{ opacity: 0, transform: 'translateY(50px) rotateY(-20deg)' }}
-    >
-      {/* Highlight badge */}
-      {feature.highlight && (
-        <div 
-          ref={highlightRef}
-          className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full transform rotate-12 shadow-lg"
+    return (
+        <div
+            ref={cardRef}
+            className={`feature-card relative p-6 rounded-2xl ${feature.bgColor} backdrop-blur-sm group cursor-pointer transition-all duration-300 border border-[var(--color-gold-200)] hover:border-[var(--color-sidecar-gold)]`}
+            style={{
+                transformStyle: 'preserve-3d',
+                perspective: '1000px',
+            }}
         >
-          {feature.highlight}
+            {/* Highlight Badge */}
+            {feature.highlight && (
+                <div className='absolute -top-3 -right-3 bg-[var(--color-sidecar-gold)] text-[var(--color-sidecar-cream)] text-xs font-bold px-3 py-1 rounded-full shadow-md font-heading uppercase tracking-wider'>
+                    {feature.highlight}
+                </div>
+            )}
+
+            {/* Gradient Border Effect */}
+            <div
+                className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${feature.borderGradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500`}
+            ></div>
+
+            {/* Icon Container */}
+            <div
+                ref={iconRef}
+                className='relative z-10 w-16 h-16 mb-4 mx-auto flex items-center justify-center text-4xl bg-[var(--color-sidecar-white)] rounded-full shadow-md group-hover:shadow-lg transition-shadow duration-300'
+            >
+                {feature.icon}
+            </div>
+
+            {/* Content */}
+            <h3 className='relative z-10 text-xl font-bold text-[var(--color-sidecar-black)] mb-3 font-heading'>
+                {feature.title}
+            </h3>
+            <p className='relative z-10 text-[var(--color-sidecar-gray)] leading-relaxed'>
+                {feature.description}
+            </p>
+
+            {/* Hover Glow Effect */}
+            <div className='absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500'>
+                <div className='absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--color-gold-300)]/10 to-transparent'></div>
+            </div>
+
+            {/* Bottom Accent Line */}
+            <div className='absolute bottom-0 left-6 right-6 h-0.5 bg-gradient-to-r from-transparent via-[var(--color-sidecar-gold)] to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-500'></div>
         </div>
-      )}
-
-      <div ref={contentRef}>
-        <div 
-          ref={iconRef}
-          className={`w-14 h-14 ${feature.bgColor} rounded-xl flex items-center justify-center mb-4 shadow-lg`}
-        >
-          <span className="text-2xl">{feature.icon}</span>
-        </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300">
-          {feature.title}
-        </h3>
-        <p className="text-gray-600 leading-relaxed text-sm">
-          {feature.description}
-        </p>
-      </div>
-
-      {/* Enhanced border gradient */}
-      <div 
-        ref={borderRef}
-        className={`absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r ${feature.borderGradient} transform scale-x-0 rounded-b-2xl origin-left`}
-      ></div>
-
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-gray-900 to-transparent rounded-2xl"></div>
-    </div>
-  );
+    );
 };

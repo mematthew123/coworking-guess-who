@@ -29,10 +29,10 @@ export const FeaturesSection = () => {
     const subtitleRef = useRef<HTMLParagraphElement>(null);
     const statsRef = useRef<HTMLDivElement>(null);
 
-    // Count-up animations for statistics - updated to reflect actual usage
-    const membersCountRef = useCountUp(250, 2.5);
-    const gamesCountRef = useCountUp(800, 2.2);
-    const connectionsCountRef = useCountUp(1200, 2.8);
+    // Count-up animations for statistics - updated for The Side Car
+    const membersCountRef = useCountUp(150, 2.5);
+    const connectionsCountRef = useCountUp(500, 2.2);
+    const eventsCountRef = useCountUp(75, 2.8);
 
     useEffect(() => {
         // Animate title with enhanced effects
@@ -133,91 +133,91 @@ export const FeaturesSection = () => {
 
     const features = [
         {
-            icon: '🎮',
-            title: 'Real-time Gameplay',
+            icon: '☕',
+            title: 'Coffee & Connect',
             description:
-                'Instant game invitations, live turn notifications, and seamless real-time updates using WebSocket technology',
-            bgColor: 'bg-blue-100',
-            borderGradient: 'from-blue-400 to-blue-600',
+                'Break the ice over virtual coffee breaks with fellow Side Car members through casual, fun gameplay',
+            bgColor: 'bg-[var(--color-gold-50)]',
+            borderGradient: 'from-[var(--color-gold-400)] to-[var(--color-gold-600)]',
             delay: 0,
-            highlight: 'Most Popular',
+            highlight: 'Member Favorite',
         },
         {
-            icon: '💬',
-            title: 'Live in-game Chat',
+            icon: '🤝',
+            title: 'Community Building',
             description:
-                'Talk strategy, banter, and build camaraderie with integrated live chat during games',
-            bgColor: 'bg-purple-100',
-            borderGradient: 'from-purple-400 to-purple-600',
+                'Strengthen bonds within The Side Car community by discovering shared interests and experiences',
+            bgColor: 'bg-[var(--color-gold-100)]',
+            borderGradient: 'from-[var(--color-gold-500)] to-[var(--color-gold-700)]',
             delay: 0.1,
         },
         {
-            icon: '👥',
-            title: 'Dynamic Character Selection',
+            icon: '💡',
+            title: 'Entrepreneur Profiles',
             description:
-                'Choose from your actual coworking community members with rich profile attributes and preferences',
-            bgColor: 'bg-green-100',
-            borderGradient: 'from-green-400 to-green-600',
+                'Learn about your fellow innovators, creators, and doers through interactive character discovery',
+            bgColor: 'bg-[var(--color-gold-50)]',
+            borderGradient: 'from-[var(--color-gold-300)] to-[var(--color-gold-500)]',
             delay: 0.2,
         },
         {
-            icon: '⚡',
-            title: 'Live Presence System',
+            icon: '📍',
+            title: 'Location-Based Play',
             description:
-                "See who's online, away, or available to play with real-time presence indicators and status updates",
-            bgColor: 'bg-yellow-100',
-            borderGradient: 'from-yellow-400 to-yellow-600',
+                'Connect with members from your preferred Side Car location or explore the entire network',
+            bgColor: 'bg-[var(--color-gold-100)]',
+            borderGradient: 'from-[var(--color-gold-400)] to-[var(--color-gold-600)]',
             delay: 0.3,
         },
         {
-            icon: '📊',
-            title: 'Advanced Game History',
+            icon: '🎯',
+            title: 'Smart Matchmaking',
             description:
-                'Detailed move tracking, elimination logic, and game analytics to improve your strategy over time',
-            bgColor: 'bg-pink-100',
-            borderGradient: 'from-pink-400 to-pink-600',
+                'Get paired with members who share your schedule, interests, or collaboration goals',
+            bgColor: 'bg-[var(--color-gold-50)]',
+            borderGradient: 'from-[var(--color-gold-500)] to-[var(--color-gold-700)]',
             delay: 0.4,
         },
         {
-            icon: '🔐',
-            title: 'Privacy & Control',
+            icon: '🏆',
+            title: 'Community Challenges',
             description:
-                'Granular control over your profile visibility, game participation, and personal information sharing',
-            bgColor: 'bg-indigo-100',
-            borderGradient: 'from-indigo-400 to-indigo-600',
+                'Participate in weekly challenges and earn recognition as a Side Car connection champion',
+            bgColor: 'bg-[var(--color-gold-100)]',
+            borderGradient: 'from-[var(--color-gold-300)] to-[var(--color-gold-500)]',
             delay: 0.5,
         },
         {
-            icon: '🎯',
-            title: 'Strategic Deduction',
+            icon: '🔐',
+            title: 'Member Privacy',
             description:
-                'Use Boolean logic and elimination strategies to narrow down possibilities and make the perfect guess',
-            bgColor: 'bg-red-100',
-            borderGradient: 'from-red-400 to-red-600',
+                'Control what information you share while still engaging meaningfully with the community',
+            bgColor: 'bg-[var(--color-gold-50)]',
+            borderGradient: 'from-[var(--color-gold-400)] to-[var(--color-gold-600)]',
             delay: 0.6,
         },
         {
-            icon: '🌐',
-            title: 'Cross-Platform Ready',
+            icon: '🌟',
+            title: 'Professional Networking',
             description:
-                'Fully responsive design works seamlessly on desktop, tablet, and mobile devices',
-            bgColor: 'bg-teal-100',
-            borderGradient: 'from-teal-400 to-teal-600',
+                'Transform gameplay connections into real professional relationships and collaborations',
+            bgColor: 'bg-[var(--color-gold-100)]',
+            borderGradient: 'from-[var(--color-gold-500)] to-[var(--color-gold-700)]',
             delay: 0.7,
         },
     ];
 
     return (
-        <section className='py-24 bg-gradient-to-br from-gray-50 to-white relative overflow-hidden'>
+        <section className='py-24 bg-gradient-to-br from-[var(--color-sidecar-cream)] to-[var(--color-gold-50)] relative overflow-hidden'>
             {/* Enhanced animated background elements */}
             <div className='absolute inset-0 overflow-hidden'>
-                <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full opacity-30 blur-3xl animate-pulse'></div>
+                <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-[var(--color-gold-100)] to-[var(--color-gold-200)] rounded-full opacity-20 blur-3xl animate-pulse'></div>
                 <div
-                    className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-br from-green-100 to-blue-100 rounded-full opacity-30 blur-3xl animate-pulse'
+                    className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-br from-[var(--color-gold-200)] to-[var(--color-gold-100)] rounded-full opacity-20 blur-3xl animate-pulse'
                     style={{ animationDelay: '1s' }}
                 ></div>
                 <div
-                    className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full opacity-20 blur-2xl animate-pulse'
+                    className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-[var(--color-gold-100)] to-[var(--color-gold-300)] rounded-full opacity-15 blur-2xl animate-pulse'
                     style={{ animationDelay: '2s' }}
                 ></div>
             </div>
@@ -228,37 +228,37 @@ export const FeaturesSection = () => {
                     ref={statsRef}
                     className='grid grid-cols-3 gap-8 max-w-4xl mx-auto mb-20 text-center'
                 >
-                    <div className='group p-6 rounded-2xl bg-white/70 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100'>
-                        <div className='text-5xl font-bold text-blue-600 group-hover:scale-110 transition-transform duration-300'>
+                    <div className='group p-6 rounded-2xl bg-[var(--color-sidecar-white)]/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-[var(--color-gold-200)]'>
+                        <div className='text-5xl font-bold text-[var(--color-sidecar-gold)] group-hover:scale-110 transition-transform duration-300 font-heading'>
                             <span ref={membersCountRef}>0</span>+
                         </div>
-                        <p className='text-gray-600 mt-3 font-medium'>
-                            Community Members
+                        <p className='text-[var(--color-sidecar-black)] mt-3 font-medium font-heading'>
+                            Side Car Members
                         </p>
-                        <p className='text-xs text-gray-500 mt-1'>
-                            across coworking spaces
-                        </p>
-                    </div>
-                    <div className='group p-6 rounded-2xl bg-white/70 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100'>
-                        <div className='text-5xl font-bold text-purple-600 group-hover:scale-110 transition-transform duration-300'>
-                            <span ref={gamesCountRef}>0</span>+
-                        </div>
-                        <p className='text-gray-600 mt-3 font-medium'>
-                            Games Completed
-                        </p>
-                        <p className='text-xs text-gray-500 mt-1'>
-                            with real-time updates
+                        <p className='text-xs text-[var(--color-sidecar-gray)] mt-1'>
+                            entrepreneurs & innovators
                         </p>
                     </div>
-                    <div className='group p-6 rounded-2xl bg-white/70 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100'>
-                        <div className='text-5xl font-bold text-green-600 group-hover:scale-110 transition-transform duration-300'>
+                    <div className='group p-6 rounded-2xl bg-[var(--color-sidecar-white)]/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-[var(--color-gold-200)]'>
+                        <div className='text-5xl font-bold text-[var(--color-gold-600)] group-hover:scale-110 transition-transform duration-300 font-heading'>
                             <span ref={connectionsCountRef}>0</span>+
                         </div>
-                        <p className='text-gray-600 mt-3 font-medium'>
-                            New Connections
+                        <p className='text-[var(--color-sidecar-black)] mt-3 font-medium font-heading'>
+                            Connections Made
                         </p>
-                        <p className='text-xs text-gray-500 mt-1'>
-                            made through gameplay
+                        <p className='text-xs text-[var(--color-sidecar-gray)] mt-1'>
+                            through community games
+                        </p>
+                    </div>
+                    <div className='group p-6 rounded-2xl bg-[var(--color-sidecar-white)]/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-[var(--color-gold-200)]'>
+                        <div className='text-5xl font-bold text-[var(--color-gold-700)] group-hover:scale-110 transition-transform duration-300 font-heading'>
+                            <span ref={eventsCountRef}>0</span>+
+                        </div>
+                        <p className='text-[var(--color-sidecar-black)] mt-3 font-medium font-heading'>
+                            Community Events
+                        </p>
+                        <p className='text-xs text-[var(--color-sidecar-gray)] mt-1'>
+                            enhanced with gameplay
                         </p>
                     </div>
                 </div>
@@ -266,17 +266,15 @@ export const FeaturesSection = () => {
                 <div className='text-center mb-20'>
                     <h2
                         ref={titleRef}
-                        className='text-5xl md:text-6xl font-bold text-gray-900 mb-6'
+                        className='text-5xl md:text-6xl font-bold text-[var(--color-sidecar-black)] mb-6 font-heading'
                     >
-                        Built for Modern Coworking
+                        Built for The Side Car Community
                     </h2>
                     <p
                         ref={subtitleRef}
-                        className='text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed'
+                        className='text-2xl text-[var(--color-sidecar-gray)] max-w-3xl mx-auto leading-relaxed'
                     >
-                        More than just a game - it&apos;s the ultimate community
-                        builder that transforms how coworkers connect and
-                        collaborate
+                        Where entrepreneurs, creators, and innovators connect through meaningful interactions and strategic gameplay
                     </p>
                 </div>
 
@@ -295,9 +293,9 @@ export const FeaturesSection = () => {
 
                 {/* Call to Action */}
                 <div className='text-center mt-20'>
-                    <div className='inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer'>
-                        <span className='mr-2'>🚀</span>
-                        Ready to transform your coworking community?
+                    <div className='inline-flex items-center px-8 py-4 rounded-full bg-gradient-to-r from-[var(--color-sidecar-gold)] to-[var(--color-gold-600)] text-[var(--color-sidecar-cream)] font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer font-heading uppercase tracking-wider'>
+                        <span className='mr-3'>☕</span>
+                        Ready to connect with The Side Car community?
                     </div>
                 </div>
             </div>
