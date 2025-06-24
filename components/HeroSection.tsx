@@ -12,7 +12,7 @@ import {
     useElasticButton,
 } from '@/hooks/animations';
 import AnimatedWave from './AnimatedWave';
-import { CommunityAvatars } from './CommunityAvatars';
+// import { CommunityAvatars } from './CommunityAvatars';
 import { Feature3DCard } from './Feature3DCard';
 
 // Register GSAP plugins
@@ -86,7 +86,7 @@ const HeroSection = () => {
             <ParticleField />
 
             {/* Community Avatars */}
-            <CommunityAvatars />
+            {/* <CommunityAvatars /> */}
 
             {/* Main Content */}
             <div className='relative z-10 container mx-auto px-4 text-center'>
@@ -233,13 +233,13 @@ const HeroSection = () => {
                         </p>
                         <div className='flex flex-wrap justify-center gap-4 text-[var(--color-sidecar-gold)] font-heading uppercase tracking-wider text-sm'>
                             <span className='px-4 py-2 bg-[var(--color-gold-50)] rounded-full'>
-                                Downtown
+                                Missoula
                             </span>
                             <span className='px-4 py-2 bg-[var(--color-gold-50)] rounded-full'>
-                                Uptown
+                               Helena
                             </span>
                             <span className='px-4 py-2 bg-[var(--color-gold-50)] rounded-full'>
-                                Innovation District
+                                Bozeman
                             </span>
                         </div>
                     </div>
