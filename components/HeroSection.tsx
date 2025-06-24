@@ -52,7 +52,7 @@ const HeroSection = () => {
                     duration: 2,
                     ease: 'power3.out',
                     delay: 0.5,
-                }
+                },
             );
         }
     }, []);
@@ -63,16 +63,20 @@ const HeroSection = () => {
             <div className='absolute inset-0'>
                 <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[var(--color-gold-100)] via-transparent to-transparent opacity-40' />
                 <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-[var(--color-gold-200)] via-transparent to-transparent opacity-30' />
-                
+
                 {/* Side Car Logo Watermark */}
-                <div 
+                <div
                     ref={logoRef}
                     className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-0'
                 >
                     <div className='w-full h-full rounded-full border-8 border-[var(--color-gold-200)] flex items-center justify-center'>
                         <div className='text-center'>
-                            <div className='font-script text-6xl text-[var(--color-gold-300)] mb-2'>The</div>
-                            <div className='font-heading text-8xl font-bold text-[var(--color-gold-300)] tracking-[0.2em]'>SIDECAR</div>
+                            <div className='font-script text-6xl text-[var(--color-gold-300)] mb-2'>
+                                The
+                            </div>
+                            <div className='font-heading text-8xl font-bold text-[var(--color-gold-300)] tracking-[0.2em]'>
+                                SIDECAR
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -93,7 +97,9 @@ const HeroSection = () => {
                         className='inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-[var(--color-gold-100)] to-[var(--color-gold-200)] text-[var(--color-sidecar-black)] text-sm font-medium mb-8 shadow-lg backdrop-blur-sm border border-[var(--color-gold-300)]/30'
                     >
                         <span className='mr-2 text-lg animate-pulse'>☕</span>
-                        <span className='font-heading'>Where Entrepreneurs Connect & Collaborate</span>
+                        <span className='font-heading'>
+                            Where Entrepreneurs Connect & Collaborate
+                        </span>
                         <span className='ml-2 px-2 py-1 bg-[var(--color-sidecar-gold)] text-[var(--color-sidecar-cream)] text-xs rounded-full animate-pulse uppercase font-heading tracking-wider'>
                             BETA
                         </span>
@@ -103,9 +109,9 @@ const HeroSection = () => {
                     <div className='relative mb-6'>
                         <h1
                             ref={titleRef}
-                            className='text-6xl md:text-7xl lg:text-8xl font-heading font-bold text-[var(--color-sidecar-black)] relative z-10'
+                            className='text-6xl md:text-7xl lg:text-8xl text-pretty font-heading font-bold text-[var(--color-sidecar-black)] relative z-10'
                         >
-                            Discover Your
+                            Discover Your{' '}
                             <span className='block text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-sidecar-gold)] to-[var(--color-gold-700)]'>
                                 Community
                             </span>
@@ -125,8 +131,9 @@ const HeroSection = () => {
                         ref={subtitleRef}
                         className='text-xl md:text-2xl lg:text-3xl text-[var(--color-sidecar-gray)] mb-12 max-w-3xl mx-auto leading-relaxed'
                     >
-                        Break the ice with fellow innovators, entrepreneurs, and creators 
-                        in a fun, strategic game designed for The Side Car community
+                        Break the ice with fellow innovators, entrepreneurs, and
+                        creators in a fun, strategic game designed for The Side
+                        Car community
                     </p>
 
                     {/* Enhanced CTA Buttons */}
@@ -218,16 +225,22 @@ const HeroSection = () => {
                             delay={0.6}
                         />
                     </div>
-                    
+
                     {/* Social Proof */}
                     <div className='mt-16 flex flex-col items-center'>
                         <p className='text-[var(--color-sidecar-gray)] mb-4 font-heading'>
                             Trusted by Side Car members in
                         </p>
                         <div className='flex flex-wrap justify-center gap-4 text-[var(--color-sidecar-gold)] font-heading uppercase tracking-wider text-sm'>
-                            <span className='px-4 py-2 bg-[var(--color-gold-50)] rounded-full'>Downtown</span>
-                            <span className='px-4 py-2 bg-[var(--color-gold-50)] rounded-full'>Uptown</span>
-                            <span className='px-4 py-2 bg-[var(--color-gold-50)] rounded-full'>Innovation District</span>
+                            <span className='px-4 py-2 bg-[var(--color-gold-50)] rounded-full'>
+                                Downtown
+                            </span>
+                            <span className='px-4 py-2 bg-[var(--color-gold-50)] rounded-full'>
+                                Uptown
+                            </span>
+                            <span className='px-4 py-2 bg-[var(--color-gold-50)] rounded-full'>
+                                Innovation District
+                            </span>
                         </div>
                     </div>
                 </div>
