@@ -5,6 +5,7 @@ import Navigation from '@/components/Navigation';
 import { ClerkProvider } from '@clerk/nextjs';
 import { SanityLive } from '@/sanity/lib/live';
 import GameInvitationNotifier from '@/components/GameInvitationNotifier';
+import Footer from '@/components/Footer';
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -36,6 +37,7 @@ export default function RootLayout({
                     <SanityLive />
                     <GameInvitationNotifier />
                     {children}
+                    <Footer />
                 </body>
             </html>
         </ClerkProvider>

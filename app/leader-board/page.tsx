@@ -3,38 +3,38 @@ import { Trophy, Gamepad2, TrendingUp, Users, AlertCircle } from 'lucide-react';
 
 const GameLeaderboard = () => {
   const stats = [
-    { value: '1,004', label: 'Total Games', icon: Gamepad2 },
-    { value: '7', label: 'Completed Games', icon: Trophy },
-    { value: '996', label: 'Active Games', icon: TrendingUp },
-    { value: '0.7%', label: 'Completion Rate', icon: AlertCircle },
+    { value: '1,004', label: 'TOTAL GAMES', icon: Gamepad2, color: 'bg-yellow' },
+    { value: '7', label: 'COMPLETED', icon: Trophy, color: 'bg-pink' },
+    { value: '996', label: 'ACTIVE', icon: TrendingUp, color: 'bg-green' },
+    { value: '0.7%', label: 'FINISH RATE', icon: AlertCircle, color: 'bg-red' },
   ];
 
   const topWinners = [
     {
       rank: 1,
-      name: 'Matthew Rhoads',
+      name: 'MATTHEW RHOADS',
       wins: 4,
       totalGames: 1003,
       winRate: '0.4%',
-      lastPlayed: 'Today',
+      lastPlayed: 'TODAY',
       medal: 'gold'
     },
     {
       rank: 2,
-      name: 'Matthew R',
+      name: 'MATTHEW R',
       wins: 3,
       totalGames: 988,
       winRate: '0.3%',
-      lastPlayed: 'Today',
+      lastPlayed: 'TODAY',
       medal: 'silver'
     },
     {
       rank: 3,
-      name: 'George Costanza',
+      name: 'GEORGE COSTANZA',
       wins: 0,
       totalGames: 13,
       winRate: '0%',
-      lastPlayed: 'Today',
+      lastPlayed: 'TODAY',
       medal: 'bronze'
     }
   ];
@@ -42,29 +42,28 @@ const GameLeaderboard = () => {
   const mostActive = [
     {
       rank: 1,
-      name: 'Matthew Rhoads',
+      name: 'MATTHEW RHOADS',
       totalGames: 1003,
       asPlayerOne: 809,
       asPlayerTwo: 194
     },
     {
       rank: 2,
-      name: 'Matthew R',
+      name: 'MATTHEW R',
       totalGames: 988,
       asPlayerOne: 182,
       asPlayerTwo: 806
     },
     {
       rank: 3,
-      name: 'George Costanza',
+      name: 'GEORGE COSTANZA',
       totalGames: 13,
       asPlayerOne: 13,
       asPlayerTwo: 0
     }
   ];
 
-
-interface Winner {
+  interface Winner {
     rank: number;
     name: string;
     wins: number;
@@ -72,22 +71,20 @@ interface Winner {
     winRate: string;
     lastPlayed: string;
     medal: 'gold' | 'silver' | 'bronze';
-}
+  }
 
-
-
-const getMedalStyles = (medal: Winner['medal']): string => {
+  const getMedalStyles = (medal: Winner['medal']): string => {
     switch (medal) {
-        case 'gold':
-            return 'bg-gradient-to-r from-yellow-50 to-amber-50 border-amber-300';
-        case 'silver':
-            return 'bg-gradient-to-r from-gray-50 to-slate-50 border-gray-300';
-        case 'bronze':
-            return 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-300';
-        default:
-            return 'bg-white';
+      case 'gold':
+        return 'bg-yellow';
+      case 'silver':
+        return 'bg-white';
+      case 'bronze':
+        return 'bg-orange';
+      default:
+        return 'bg-white';
     }
-};
+  };
 
   const getRankEmoji = (rank: number) => {
     switch (rank) {
@@ -99,14 +96,26 @@ const getMedalStyles = (medal: Winner['medal']): string => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-cream relative overflow-hidden">
+      {/* Geometric Background */}
+      <div className='absolute inset-0 overflow-hidden pointer-events-none'>
+        <div className='absolute top-20 left-10 w-64 h-64 bg-pink border-8 border-black rotate-12' />
+        <div className='absolute bottom-10 right-20 w-48 h-96 bg-blue border-8 border-black -rotate-6' />
+        <div className='absolute top-1/3 right-1/4 w-56 h-56 bg-green border-8 border-black rotate-45' />
+        <div className='absolute bottom-1/3 left-1/4 w-72 h-36 bg-yellow border-8 border-black -rotate-12' />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-4">
-            🏆 Coworking Game Leaderboard
+          <h1 className="text-6xl md:text-8xl font-black uppercase mb-6">
+            <span className='inline-block bg-black text-yellow px-6 py-3 border-8 border-yellow shadow-brutal-xl transform -rotate-2'>
+              🏆 LEADERBOARD
+            </span>
           </h1>
-          <p className="text-lg text-gray-600">Guess Who&apos;s Who in the Coworking Space!</p>
+          <p className="text-2xl font-black uppercase bg-white border-6 border-black px-6 py-3 inline-block shadow-brutal-md transform rotate-1">
+            WHO&apos;S THE BEST GUESSER?!
+          </p>
         </div>
 
         {/* Stats Grid */}
@@ -116,49 +125,51 @@ const getMedalStyles = (medal: Winner['medal']): string => {
             return (
               <div
                 key={index}
-                className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                className={`${stat.color} border-6 border-black p-6 shadow-brutal-md hover:shadow-brutal-xl hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-100 transform ${
+                  index % 2 === 0 ? '-rotate-1' : 'rotate-1'
+                }`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <Icon className="w-8 h-8 text-primary-500" />
-                  <span className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                  <Icon className="w-10 h-10 text-black" strokeWidth={3} />
+                  <span className="text-4xl font-black text-black">
                     {stat.value}
                   </span>
                 </div>
-                <p className="text-gray-600 text-sm uppercase tracking-wider">{stat.label}</p>
+                <p className="text-black font-black uppercase">{stat.label}</p>
               </div>
             );
           })}
         </div>
 
         {/* Top Winners */}
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-8">
-          <h2 className="text-2xl font-bold text-primary-700 mb-6 flex items-center gap-2">
-            <Trophy className="w-7 h-7" />
-            Top Winners
+        <div className="bg-white border-8 border-black p-8 shadow-brutal-xl mb-8">
+          <h2 className="text-4xl font-black uppercase mb-6 flex items-center gap-3 bg-pink text-white px-4 py-2 inline-block shadow-brutal-md">
+            <Trophy className="w-8 h-8" strokeWidth={3} />
+            TOP WINNERS
           </h2>
           <div className="space-y-4">
             {topWinners.map((player) => (
               <div
                 key={player.rank}
-                className={`rounded-xl border p-6 transform transition-all duration-300 hover:translate-x-2 hover:shadow-lg ${getMedalStyles(player.medal as 'gold' | 'silver' | 'bronze')}`}
+                className={`${getMedalStyles(player.medal as 'gold' | 'silver' | 'bronze')} border-6 border-black p-6 shadow-brutal-md hover:shadow-brutal-xl hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-100`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <span className="text-3xl font-bold text-gray-700">
+                    <span className="text-5xl font-black text-black">
                       {getRankEmoji(player.rank)}
                     </span>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">{player.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {player.totalGames} games played • {player.winRate} win rate • Last played: {player.lastPlayed}
+                      <h3 className="text-2xl font-black uppercase text-black">{player.name}</h3>
+                      <p className="text-sm font-bold uppercase text-black">
+                        {player.totalGames} GAMES • {player.winRate} WIN RATE • PLAYED: {player.lastPlayed}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                    <span className="text-5xl font-black text-black">
                       {player.wins}
                     </span>
-                    <p className="text-sm text-gray-500 uppercase">Wins</p>
+                    <p className="text-sm font-black uppercase text-black">WINS</p>
                   </div>
                 </div>
               </div>
@@ -167,34 +178,36 @@ const getMedalStyles = (medal: Winner['medal']): string => {
         </div>
 
         {/* Most Active Players */}
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-8">
-          <h2 className="text-2xl font-bold text-primary-700 mb-6 flex items-center gap-2">
-            <Gamepad2 className="w-7 h-7" />
-            Most Active Players
+        <div className="bg-white border-8 border-black p-8 shadow-brutal-xl mb-8">
+          <h2 className="text-4xl font-black uppercase mb-6 flex items-center gap-3 bg-blue text-white px-4 py-2 inline-block shadow-brutal-md">
+            <Gamepad2 className="w-8 h-8" strokeWidth={3} />
+            MOST ACTIVE
           </h2>
           <div className="space-y-4">
-            {mostActive.map((player) => (
+            {mostActive.map((player, index) => (
               <div
                 key={player.rank}
-                className="bg-gray-50 rounded-xl border border-gray-200 p-6 transform transition-all duration-300 hover:bg-gray-100 hover:shadow-lg hover:translate-x-2"
+                className={`border-6 border-black p-6 shadow-brutal-md hover:shadow-brutal-xl hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-100 ${
+                  index === 0 ? 'bg-purple' : index === 1 ? 'bg-mint' : 'bg-peach'
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <span className="text-2xl font-bold text-gray-700 bg-primary-100 w-12 h-12 rounded-full flex items-center justify-center">
+                    <span className="text-3xl font-black text-black bg-white border-4 border-black w-16 h-16 flex items-center justify-center shadow-brutal-sm">
                       {player.rank}
                     </span>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">{player.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {player.asPlayerOne} as Player 1 • {player.asPlayerTwo} as Player 2
+                      <h3 className="text-2xl font-black uppercase text-black">{player.name}</h3>
+                      <p className="text-sm font-bold uppercase text-black">
+                        P1: {player.asPlayerOne} TIMES • P2: {player.asPlayerTwo} TIMES
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                    <span className="text-5xl font-black text-black">
                       {player.totalGames}
                     </span>
-                    <p className="text-sm text-gray-500 uppercase">Games</p>
+                    <p className="text-sm font-black uppercase text-black">GAMES</p>
                   </div>
                 </div>
               </div>
@@ -203,38 +216,38 @@ const getMedalStyles = (medal: Winner['medal']): string => {
         </div>
 
         {/* Insights */}
-        <div className="bg-gradient-to-r from-accent-50 to-accent-100 rounded-3xl border border-accent-300 p-8">
-          <h3 className="text-2xl font-bold text-accent-800 mb-4 flex items-center gap-2">
-            <Users className="w-7 h-7" />
-            Game Insights
+        <div className="bg-black text-yellow border-8 border-yellow p-8 shadow-brutal-xl">
+          <h3 className="text-4xl font-black uppercase mb-6 flex items-center gap-3">
+            <Users className="w-10 h-10" strokeWidth={3} />
+            GAME FACTS
           </h3>
-          <div className="space-y-3 text-gray-700">
-            <p className="flex items-start gap-2">
-              <span className="text-lg">🎯</span>
-              <span>
-                The game has an extremely low completion rate of{' '}
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800 border border-red-200">
+          <div className="space-y-4 text-yellow">
+            <p className="flex items-start gap-3">
+              <span className="text-2xl">🎯</span>
+              <span className="font-bold uppercase">
+                COMPLETION RATE IS ONLY{' '}
+                <span className="bg-red text-black px-3 py-1 font-black">
                   0.7%
                 </span>{' '}
-                with 996 out of 1,004 games still active.
+                - 996 OUT OF 1,004 GAMES STILL GOING!
               </span>
             </p>
-            <p className="flex items-start gap-2">
-              <span className="text-lg">🏃</span>
-              <span>
-                Matthew Rhoads is the most dedicated player with over 1,000 games started, though only 4 have been completed.
+            <p className="flex items-start gap-3">
+              <span className="text-2xl">🏃</span>
+              <span className="font-bold uppercase">
+                MATTHEW RHOADS HAS STARTED OVER 1,000 GAMES BUT ONLY FINISHED 4!
               </span>
             </p>
-            <p className="flex items-start gap-2">
-              <span className="text-lg">🎲</span>
-              <span>
-                The game appears to be a &quot;Guess Who&quot; style game where players try to identify each other&apos;s target members from the coworking space.
+            <p className="flex items-start gap-3">
+              <span className="text-2xl">🎲</span>
+              <span className="font-bold uppercase">
+                IT&apos;S A &quot;GUESS WHO&quot; GAME WHERE YOU IDENTIFY COWORKING MEMBERS!
               </span>
             </p>
-            <p className="flex items-start gap-2">
-              <span className="text-lg">💡</span>
-              <span>
-                Most games seem to be abandoned rather than completed, suggesting either the game is very difficult or players lose interest.
+            <p className="flex items-start gap-3">
+              <span className="text-2xl">💡</span>
+              <span className="font-bold uppercase">
+                MOST GAMES GET ABANDONED - TOO HARD OR TOO BORING?!
               </span>
             </p>
           </div>

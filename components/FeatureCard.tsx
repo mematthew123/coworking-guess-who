@@ -6,175 +6,139 @@ type Feature = {
   icon: string;
   title: string;
   description: string;
-  bgColor: string;
-  borderGradient: string;
-  delay: number;
+  color: string;
   highlight?: string;
 };
 
-export const FeatureCard = ({ feature }: { feature: Feature; index: number }) => {
+export const FeatureCard = ({ feature, index }: { feature: Feature; index: number }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const iconRef = useRef<HTMLDivElement>(null);
-  const borderRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!cardRef.current || !iconRef.current || !borderRef.current) return;
+    if (!cardRef.current) return;
 
-    // Set initial states with enhanced 3D transforms
+    // Set initial rotation
     gsap.set(cardRef.current, {
-      transformPerspective: 1000,
-      transformStyle: 'preserve-3d',
+      rotation: index % 2 === 0 ? -2 : 2,
     });
 
-    // Create enhanced hover animation timeline
-    const tl = gsap.timeline({ paused: true });
-    
-    tl.to(cardRef.current, {
-      rotateY: 8,
-      rotateX: -8,
-      scale: 1.08,
-      z: 50,
-      duration: 0.4,
-      ease: 'power2.out',
-    })
-    .to(iconRef.current, {
-      scale: 1.3,
-      rotation: 360,
-      duration: 0.6,
-      ease: 'back.out(1.7)',
-    }, 0)
-    .to(borderRef.current, {
-      scaleX: 1,
-      duration: 0.4,
-      ease: 'power2.out',
-    }, 0)
-    .to(contentRef.current, {
-      y: -5,
-      duration: 0.4,
-      ease: 'power2.out',
-    }, 0);
-
-    // Add enhanced hover listeners
+    // Harsh hover effects
     const handleMouseEnter = () => {
-      tl.play();
-      // Add subtle glow effect
       gsap.to(cardRef.current, {
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 30px rgba(59, 130, 246, 0.15)',
-        duration: 0.3,
+        scale: 1.05,
+        rotation: 0,
+        duration: 0.1,
+        ease: 'none',
       });
+      
+      gsap.to(iconRef.current, {
+        scale: 1.2,
+        rotation: 360,
+        duration: 0.2,
+        ease: 'none',
+      });
+
+      // Change shadow
+      if (cardRef.current) {
+        cardRef.current.classList.remove('shadow-brutal-md');
+        cardRef.current.classList.add('shadow-brutal-xl');
+      }
     };
 
     const handleMouseLeave = () => {
-      tl.reverse();
       gsap.to(cardRef.current, {
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        duration: 0.3,
+        scale: 1,
+        rotation: index % 2 === 0 ? -2 : 2,
+        duration: 0.1,
+        ease: 'none',
+      });
+      
+      gsap.to(iconRef.current, {
+        scale: 1,
+        rotation: 0,
+        duration: 0.2,
+        ease: 'none',
+      });
+
+      // Reset shadow
+      if (cardRef.current) {
+        cardRef.current.classList.remove('shadow-brutal-xl');
+        cardRef.current.classList.add('shadow-brutal-md');
+      }
+    };
+
+    // Click effect
+    const handleClick = () => {
+      gsap.to(cardRef.current, {
+        scale: 0.95,
+        duration: 0.05,
+        ease: 'none',
+        yoyo: true,
+        repeat: 1,
       });
     };
 
     cardRef.current.addEventListener('mouseenter', handleMouseEnter);
     cardRef.current.addEventListener('mouseleave', handleMouseLeave);
+    cardRef.current.addEventListener('click', handleClick);
 
-    // Enhanced mouse move effect with magnetic attraction
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!cardRef.current) return;
-      
-      const rect = cardRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      
-      const rotateX = ((y - centerY) / centerY) * 15;
-      const rotateY = ((x - centerX) / centerX) * 15;
-      
-      gsap.to(cardRef.current, {
-        rotateX: -rotateX,
-        rotateY: rotateY,
-        duration: 0.3,
-        ease: 'power2.out',
+    // Shake effect on highlight
+    if (highlightRef.current) {
+      gsap.to(highlightRef.current, {
+        rotation: 15,
+        duration: 0.1,
+        ease: 'none',
+        yoyo: true,
+        repeat: -1,
+        repeatDelay: 2,
       });
-
-      // Magnetic effect for icon
-      gsap.to(iconRef.current, {
-        x: (x - centerX) * 0.1,
-        y: (y - centerY) * 0.1,
-        duration: 0.3,
-        ease: 'power2.out',
-      });
-    };
-
-    const handleMouseLeaveCard = () => {
-      gsap.to(cardRef.current, {
-        rotateX: 0,
-        rotateY: 0,
-        duration: 0.5,
-        ease: 'power2.out',
-      });
-
-      gsap.to(iconRef.current, {
-        x: 0,
-        y: 0,
-        duration: 0.5,
-        ease: 'power2.out',
-      });
-    };
-
-    cardRef.current.addEventListener('mousemove', handleMouseMove);
-    cardRef.current.addEventListener('mouseleave', handleMouseLeaveCard);
+    }
 
     return () => {
       if (cardRef.current) {
         cardRef.current.removeEventListener('mouseenter', handleMouseEnter);
         cardRef.current.removeEventListener('mouseleave', handleMouseLeave);
-        cardRef.current.removeEventListener('mousemove', handleMouseMove);
-        cardRef.current.removeEventListener('mouseleave', handleMouseLeaveCard);
+        cardRef.current.removeEventListener('click', handleClick);
       }
     };
-  }, []);
+  }, [index]);
 
   return (
     <div
       ref={cardRef}
-      className="feature-card group relative p-6 rounded-2xl bg-white/80 backdrop-blur-sm hover:bg-white shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-100 overflow-hidden"
-      style={{ opacity: 0, transform: 'translateY(50px) rotateY(-20deg)' }}
+      className={`brutalist-feature-card relative ${feature.color} border-8 border-black p-8 shadow-brutal-md cursor-pointer transition-all duration-100`}
     >
       {/* Highlight badge */}
       {feature.highlight && (
         <div 
           ref={highlightRef}
-          className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full transform rotate-12 shadow-lg"
+          className="absolute -top-4 -right-4 bg-red text-white font-black px-4 py-2 border-4 border-black transform rotate-12 shadow-brutal-sm"
         >
           {feature.highlight}
         </div>
       )}
 
-      <div ref={contentRef}>
-        <div 
-          ref={iconRef}
-          className={`w-14 h-14 ${feature.bgColor} rounded-xl flex items-center justify-center mb-4 shadow-lg`}
-        >
-          <span className="text-2xl">{feature.icon}</span>
-        </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300">
-          {feature.title}
-        </h3>
-        <p className="text-gray-600 leading-relaxed text-sm">
-          {feature.description}
-        </p>
+      {/* Icon */}
+      <div 
+        ref={iconRef}
+        className="text-6xl mb-4 inline-block"
+      >
+        {feature.icon}
       </div>
 
-      {/* Enhanced border gradient */}
-      <div 
-        ref={borderRef}
-        className={`absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r ${feature.borderGradient} transform scale-x-0 rounded-b-2xl origin-left`}
-      ></div>
+      {/* Title */}
+      <h3 className="text-2xl font-black uppercase mb-3 text-black">
+        {feature.title}
+      </h3>
 
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-gray-900 to-transparent rounded-2xl"></div>
+      {/* Description */}
+      <p className="text-black font-bold uppercase text-sm leading-tight">
+        {feature.description}
+      </p>
+
+      {/* Bottom accent */}
+      <div className="absolute bottom-0 left-0 right-0 h-2 bg-black"></div>
     </div>
   );
 };

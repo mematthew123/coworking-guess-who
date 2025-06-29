@@ -26,24 +26,24 @@ export default function GameBoard({
   useEffect(() => {
     if (!boardRef.current || typeof window === 'undefined') return;
 
-    // Animate cards in with stagger effect
+    // Harsh card entrance
     gsap.fromTo(
       cardRefs.current.filter(Boolean),
       {
         opacity: 0,
-        scale: 0.8,
-        rotationY: -90,
+        scale: 0,
+        rotate: () => Math.random() * 30 - 15,
       },
       {
         opacity: 1,
         scale: 1,
-        rotationY: 0,
-        duration: 0.6,
+        rotate: () => Math.random() * 6 - 3,
+        duration: 0.2,
         stagger: {
-          each: 0.05,
+          each: 0.03,
           from: "random",
         },
-        ease: "back.out(1.7)",
+        ease: "none",
       }
     );
   }, [members]);
@@ -60,40 +60,37 @@ export default function GameBoard({
       const crossRefs = card.querySelectorAll('.elimination-cross');
       
       if (isEliminated) {
-        // Animate to eliminated state
+        // Harsh elimination effect
         gsap.to(card, {
-          scale: 0.95,
-          duration: 0.3,
-          ease: "power2.inOut",
+          scale: 0.9,
+          rotate: 0,
+          duration: 0.1,
+          ease: "none",
         });
         
-        // Animate the cross appearing
+        // Slam the cross on
         gsap.fromTo(
           crossRefs,
           {
             scale: 0,
-            rotation: 0,
           },
           {
             scale: 1,
-            rotation: 45,
-            duration: 0.4,
-            stagger: 0.1,
-            ease: "back.out(1.7)",
+            duration: 0.1,
+            ease: "none",
           }
         );
       } else {
-        // Animate back to normal state
+        // Snap back to normal
         gsap.to(card, {
           scale: 1,
-          duration: 0.3,
-          ease: "power2.inOut",
+          duration: 0.1,
+          ease: "none",
         });
         
-        // Hide the cross
-        gsap.to(crossRefs, {
+        // Hide the cross instantly
+        gsap.set(crossRefs, {
           scale: 0,
-          duration: 0.2,
         });
       }
     });
@@ -105,13 +102,13 @@ export default function GameBoard({
     const card = cardRefs.current[index];
     if (!card) return;
 
-    // Bounce animation on click
+    // Harsh click feedback
     gsap.to(card, {
-      scale: 0.9,
-      duration: 0.1,
+      scale: 0.85,
+      duration: 0.05,
       yoyo: true,
       repeat: 1,
-      ease: "power2.inOut",
+      ease: "none",
       onComplete: () => {
         onToggleMember(memberId);
       }
@@ -125,19 +122,22 @@ export default function GameBoard({
     if (!card) return;
 
     gsap.to(card, {
-      y: isHovering ? -8 : 0,
-      boxShadow: isHovering 
-        ? "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
-        : "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
-      duration: 0.3,
-      ease: "power2.out",
+      x: isHovering ? -4 : 0,
+      y: isHovering ? -4 : 0,
+      duration: 0.1,
+      ease: "none",
     });
+  };
+
+  const getCardColor = (index: number) => {
+    const colors = ['bg-yellow', 'bg-pink', 'bg-green', 'bg-blue', 'bg-orange', 'bg-purple'];
+    return colors[index % colors.length];
   };
 
   return (
     <div 
       ref={boardRef}
-      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-4"
+      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 p-6 bg-cream"
     >
       {members.map((member, index) => (
         <div
@@ -147,25 +147,18 @@ export default function GameBoard({
           onMouseEnter={() => handleCardHover(index, true)}
           onMouseLeave={() => handleCardHover(index, false)}
           className={`
-            relative rounded-xl overflow-hidden bg-white
+            relative bg-white border-6 border-black
             transition-all transform-gpu
-            ${readonly ? '' : 'cursor-pointer'}
+            ${readonly ? '' : 'cursor-pointer hover:shadow-brutal-xl'}
             ${eliminatedIds.includes(member._id) ? 'eliminated-card' : ''}
+            shadow-brutal-md
           `}
           style={{
-            transformStyle: 'preserve-3d',
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-            opacity: 1, // Ensure cards are visible by default
-            transform: 'scale(1)', // Prevent layout shift
+            transform: `rotate(${Math.random() * 6 - 3}deg)`,
           }}
         >
-          {/* Card glow effect on hover */}
-          {!readonly && (
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 hover:opacity-10 transition-opacity duration-300 pointer-events-none" />
-          )}
-          
           {/* Member image container */}
-          <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+          <div className={`relative aspect-[3/4] ${getCardColor(index)} border-b-6 border-black overflow-hidden`}>
             {member?.image ? (
               <Image 
                 src={urlFor(member?.image).width(300).height(400).url()}
@@ -174,31 +167,31 @@ export default function GameBoard({
                 height={400}
                 className={`
                   object-cover w-full h-full
-                  transition-all duration-300
+                  transition-all duration-100
                   ${eliminatedIds.includes(member._id) ? 'grayscale brightness-50' : ''}
                 `}
                 priority={index < 6}
               />
             ) : (
-              <div className="flex items-center justify-center h-full bg-gradient-to-br from-blue-100 to-purple-100">
-                <span className="text-6xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+              <div className="flex items-center justify-center h-full bg-black">
+                <span className="text-8xl font-black text-white">
                   {member?.name?.charAt(0) ?? '?'}
                 </span>
               </div>
             )}
             
-            {/* Gradient overlay for eliminated cards */}
+            {/* Black overlay for eliminated cards */}
             {eliminatedIds.includes(member._id) && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-black/70 pointer-events-none" />
             )}
           </div>
           
           {/* Member info */}
-          <div className="bg-white p-3 border-t border-gray-100">
-            <h3 className="font-semibold text-gray-900 truncate text-sm">
+          <div className="bg-white p-4">
+            <h3 className="font-black text-black uppercase truncate text-base">
               {member.name}
             </h3>
-            <p className="text-xs text-gray-500 truncate mt-0.5">
+            <p className="text-sm font-bold uppercase text-black/80 truncate mt-1">
               {member.profession}
             </p>
           </div>
@@ -207,11 +200,11 @@ export default function GameBoard({
           {eliminatedIds.includes(member._id) && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div 
-                className="elimination-cross absolute w-full h-1 bg-red-500 shadow-lg"
+                className="elimination-cross absolute w-full h-2 bg-red border-2 border-black"
                 style={{ transform: 'rotate(45deg)' }}
               />
               <div 
-                className="elimination-cross absolute w-full h-1 bg-red-500 shadow-lg"
+                className="elimination-cross absolute w-full h-2 bg-red border-2 border-black"
                 style={{ transform: 'rotate(-45deg)' }}
               />
             </div>
@@ -219,9 +212,9 @@ export default function GameBoard({
           
           {/* Interactive hint */}
           {!readonly && !eliminatedIds.includes(member._id) && (
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                Click to {eliminatedIds.includes(member._id) ? 'restore' : 'eliminate'}
+            <div className="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity duration-100">
+              <div className="bg-black text-yellow font-bold uppercase text-xs px-3 py-1 border-2 border-yellow">
+                {eliminatedIds.includes(member._id) ? 'RESTORE' : 'ELIMINATE'}
               </div>
             </div>
           )}
