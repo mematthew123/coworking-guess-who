@@ -1,47 +1,267 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brutalist color scheme */
+  --background: #f7f3e9;
+  --foreground: #000000;
+  
+  /* Bold, contrasting colors */
+  --brutalist-black: #000000;
+  --brutalist-white: #ffffff;
+  --brutalist-yellow: #ffee00;
+  --brutalist-pink: #ff006e;
+  --brutalist-blue: #0066ff;
+  --brutalist-green: #00ff88;
+  --brutalist-orange: #ff6b00;
+  --brutalist-purple: #8b00ff;
+  --brutalist-red: #ff0000;
+  
+  /* Background variations */
+  --brutalist-bg-cream: #f7f3e9;
+  --brutalist-bg-mint: #e8fff0;
+  --brutalist-bg-peach: #ffe8d6;
+  --brutalist-bg-lavender: #f0e6ff;
+  
+  /* Border styles */
+  --brutalist-border-width: 4px;
+  --brutalist-border-width-thick: 8px;
+  --brutalist-border-color: var(--brutalist-black);
+  
+  /* Shadows - harsh, offset shadows */
+  --brutalist-shadow-sm: 4px 4px 0px var(--brutalist-black);
+  --brutalist-shadow-md: 8px 8px 0px var(--brutalist-black);
+  --brutalist-shadow-lg: 12px 12px 0px var(--brutalist-black);
+  --brutalist-shadow-xl: 16px 16px 0px var(--brutalist-black);
+  
+  /* Colored shadows */
+  --brutalist-shadow-pink: 8px 8px 0px var(--brutalist-pink);
+  --brutalist-shadow-blue: 8px 8px 0px var(--brutalist-blue);
+  --brutalist-shadow-yellow: 8px 8px 0px var(--brutalist-yellow);
+  
+  /* Typography */
+  --brutalist-font-display: 'Arial Black', 'Helvetica Neue', sans-serif;
+  --brutalist-font-body: 'Arial', 'Helvetica', sans-serif;
+  --brutalist-font-mono: 'Courier New', monospace;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--brutalist-font-body);
+  --font-mono: var(--brutalist-font-mono);
   
-  /* Custom color palette */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  /* Brutalist color palette for Tailwind V4 */
+  --color-black: var(--brutalist-black);
+  --color-white: var(--brutalist-white);
+  --color-yellow: var(--brutalist-yellow);
+  --color-pink: var(--brutalist-pink);
+  --color-blue: var(--brutalist-blue);
+  --color-green: var(--brutalist-green);
+  --color-orange: var(--brutalist-orange);
+  --color-purple: var(--brutalist-purple);
+  --color-red: var(--brutalist-red);
   
-  --color-secondary-50: #fdf2f8;
-  --color-secondary-100: #fce7f3;
-  --color-secondary-200: #fbcfe8;
-  --color-secondary-300: #f9a8d4;
-  --color-secondary-400: #f472b6;
-  --color-secondary-500: #ec4899;
-  --color-secondary-600: #db2777;
-  --color-secondary-700: #be185d;
-  --color-secondary-800: #9d174d;
-  --color-secondary-900: #831843;
+  /* Background colors */
+  --color-cream: var(--brutalist-bg-cream);
+  --color-mint: var(--brutalist-bg-mint);
+  --color-peach: var(--brutalist-bg-peach);
+  --color-lavender: var(--brutalist-bg-lavender);
   
-  --color-accent-50: #f0fdf4;
-  --color-accent-100: #dcfce7;
-  --color-accent-200: #bbf7d0;
-  --color-accent-300: #86efac;
-  --color-accent-400: #4ade80;
-  --color-accent-500: #22c55e;
-  --color-accent-600: #16a34a;
-  --color-accent-700: #15803d;
-  --color-accent-800: #166534;
-  --color-accent-900: #14532d;
+  /* Custom spacing for brutalist borders */
+  --spacing-brutal-border: 4px;
+  --spacing-brutal-border-thick: 8px;
+  
+  /* Custom shadow values */
+  --shadow-brutal-sm: 4px 4px 0px var(--brutalist-black);
+  --shadow-brutal-md: 8px 8px 0px var(--brutalist-black);
+  --shadow-brutal-lg: 12px 12px 0px var(--brutalist-black);
+  --shadow-brutal-xl: 16px 16px 0px var(--brutalist-black);
+  --shadow-brutal-pink: 8px 8px 0px var(--brutalist-pink);
+  --shadow-brutal-blue: 8px 8px 0px var(--brutalist-blue);
+  --shadow-brutal-yellow: 8px 8px 0px var(--brutalist-yellow);
+  
+  /* Custom border widths */
+  --width-border-6: 6px;
+  --width-border-8: 8px;
+  
+  /* Font families */
+  --font-family-display: 'Arial Black', 'Helvetica Neue', sans-serif;
+  --font-family-body: 'Arial', 'Helvetica', sans-serif;
+  --font-family-mono: 'Courier New', monospace;
+}
+
+/* Global brutalist styles */
+* {
+  border-radius: 0 !important;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--brutalist-font-body);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--brutalist-font-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.05em;
+}
+
+/* Utility classes for brutalist design */
+.brutalist-border {
+  border: var(--brutalist-border-width) solid var(--brutalist-border-color);
+}
+
+.brutalist-border-thick {
+  border: var(--brutalist-border-width-thick) solid var(--brutalist-border-color);
+}
+
+.brutalist-shadow-sm {
+  box-shadow: var(--brutalist-shadow-sm);
+}
+
+.brutalist-shadow-md {
+  box-shadow: var(--brutalist-shadow-md);
+}
+
+.brutalist-shadow-lg {
+  box-shadow: var(--brutalist-shadow-lg);
+}
+
+.brutalist-shadow-xl {
+  box-shadow: var(--brutalist-shadow-xl);
+}
+
+.brutalist-shadow-pink {
+  box-shadow: var(--brutalist-shadow-pink);
+}
+
+.brutalist-shadow-blue {
+  box-shadow: var(--brutalist-shadow-blue);
+}
+
+.brutalist-shadow-yellow {
+  box-shadow: var(--brutalist-shadow-yellow);
+}
+
+/* Hover effects */
+.brutalist-hover:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 12px 12px 0px var(--brutalist-black);
+}
+
+/* Text styles */
+.brutalist-text-outline {
+  -webkit-text-stroke: 3px var(--brutalist-black);
+  text-stroke: 3px var(--brutalist-black);
+}
+
+.brutalist-text-shadow {
+  text-shadow: 4px 4px 0px var(--brutalist-black);
+}
+
+/* Animations */
+@keyframes brutalist-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+@keyframes brutalist-glitch {
+  0%, 100% { 
+    transform: translate(0);
+    filter: hue-rotate(0deg);
+  }
+  20% { 
+    transform: translate(-2px, 2px);
+    filter: hue-rotate(90deg);
+  }
+  40% { 
+    transform: translate(-2px, -2px);
+    filter: hue-rotate(180deg);
+  }
+  60% { 
+    transform: translate(2px, 2px);
+    filter: hue-rotate(270deg);
+  }
+  80% { 
+    transform: translate(2px, -2px);
+    filter: hue-rotate(360deg);
+  }
+}
+
+.brutalist-shake {
+  animation: brutalist-shake 0.5s ease-in-out;
+}
+
+.brutalist-glitch {
+  animation: brutalist-glitch 0.3s ease-in-out infinite;
+}
+
+/* Button styles */
+.brutalist-button {
+  background-color: var(--brutalist-yellow);
+  color: var(--brutalist-black);
+  border: var(--brutalist-border-width) solid var(--brutalist-border-color);
+  padding: 16px 32px;
+  font-family: var(--brutalist-font-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: var(--brutalist-shadow-md);
+  transition: all 0.1s ease;
+}
+
+.brutalist-button:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 12px 12px 0px var(--brutalist-black);
+}
+
+.brutalist-button:active {
+  transform: translate(0, 0);
+  box-shadow: 0px 0px 0px var(--brutalist-black);
+}
+
+/* Tailwind V4 Custom Utilities */
+@utility shadow-brutal-sm {
+  box-shadow: var(--shadow-brutal-sm);
+}
+
+@utility shadow-brutal-md {
+  box-shadow: var(--shadow-brutal-md);
+}
+
+@utility shadow-brutal-lg {
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+@utility shadow-brutal-xl {
+  box-shadow: var(--shadow-brutal-xl);
+}
+
+@utility border-6 {
+  border-width: var(--width-border-6);
+}
+
+@utility border-8 {
+  border-width: var(--width-border-8);
+}
+
+@utility font-display {
+  font-family: var(--font-family-display);
+}
+
+@utility font-body {
+  font-family: var(--font-family-body);
+}
+
+@utility animate-shake {
+  animation: brutalist-shake 0.5s ease-in-out;
+}
+
+@utility animate-glitch {
+  animation: brutalist-glitch 0.3s ease-in-out infinite;
 }
