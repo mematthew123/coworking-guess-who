@@ -226,7 +226,7 @@ export const FeaturesSection = () => {
                 {/* Stats Bar */}
                 <div
                     ref={statsRef}
-                    className='grid grid-cols-3 gap-8 max-w-4xl mx-auto mb-20'
+                    className=' flex-col md:grid grid-cols-3 gap-8 max-w-4xl mx-auto mb-20'
                 >
                     <div className='stat-box relative'>
                         <div className='bg-pink border-8 border-black p-8 shadow-brutal-lg transform -rotate-2 hover:rotate-0 transition-transform duration-100'>
