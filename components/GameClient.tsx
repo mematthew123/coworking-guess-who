@@ -123,7 +123,6 @@ export default function GameClient({ gameId }: GameClientProps) {
         }
     }, [game?.currentTurn, sanityUserId]);
 
-
     // Navigate away when game ends (optional auto-redirect)
     useEffect(() => {
         if (
@@ -289,7 +288,6 @@ export default function GameClient({ gameId }: GameClientProps) {
     }
     return (
         <>
-
             <div className='container mx-auto p-4'>
                 <div className='mb-6'>
                     {/* Debug info - only show in development mode  add && <TurnDebugInfo />*/}
@@ -304,7 +302,6 @@ export default function GameClient({ gameId }: GameClientProps) {
                     >
                         End Game
                     </button>
-
 
                     <RealtimeIndicator
                         lastUpdated={lastUpdate || game._updatedAt}
@@ -390,22 +387,22 @@ export default function GameClient({ gameId }: GameClientProps) {
                                 // When it's your turn
                                 guessMode ? (
                                     // In guess mode
-                                    <div className='bg-white rounded-lg shadow-md p-4'>
-                                        <h3 className='text-xl font-bold text-gray-800 mb-4'>
+                                    <div className='bg-yellow border-6 border-black p-6 shadow-brutal-md'>
+                                        <h3 className='text-2xl font-black uppercase mb-4'>
                                             Make Your Guess
                                         </h3>
-                                        <p className='text-gray-600 mb-2'>
+                                        <p className='font-bold uppercase text-black'>
                                             Click on the member you think is
                                             your opponent!
                                         </p>
                                     </div>
                                 ) : (
                                     // Normal question mode
-                                    <div className='bg-white rounded-lg shadow-md p-4'>
-                                        <h3 className='text-xl font-bold text-gray-800 mb-4'>
+                                    <div className='bg-pink border-6 border-black p-6 shadow-brutal-md'>
+                                        <h3 className='text-2xl font-black uppercase text-white mb-4'>
                                             Ask a Question
                                         </h3>
-                                        <p className='text-gray-600 mb-2'>
+                                        <p className='font-bold uppercase text-white'>
                                             Select a question category above to
                                             ask your opponent.
                                         </p>
@@ -413,15 +410,15 @@ export default function GameClient({ gameId }: GameClientProps) {
                                 )
                             ) : (
                                 // When it's NOT your turn
-                                <div className='bg-white rounded-lg shadow-md p-4'>
-                                    <h3 className='text-xl font-bold text-gray-800 mb-4'>
+                                <div className='bg-white border-6 border-black p-6 shadow-brutal-md'>
+                                    <h3 className='text-2xl font-black uppercase mb-4'>
                                         Opponent&apos;s Turn
                                     </h3>
-                                    <p className='text-gray-600'>
+                                    <p className='font-bold uppercase text-black mb-2'>
                                         Waiting for your opponent to make their
                                         move...
                                     </p>
-                                    <p className='text-gray-500 text-sm mt-2'>
+                                    <p className='text-sm font-bold uppercase text-black/70'>
                                         The game will update automatically when
                                         it&apos;s your turn.
                                     </p>
@@ -436,23 +433,23 @@ export default function GameClient({ gameId }: GameClientProps) {
                             />
 
                             {/* Game Status */}
-                            <div className='bg-white rounded-lg shadow-md p-4'>
-                                <h3 className='text-xl font-bold text-gray-800 mb-2'>
+                            <div className='bg-black text-yellow border-6 border-yellow p-6 shadow-brutal-md'>
+                                <h3 className='text-2xl font-black uppercase mb-4'>
                                     Game Status
                                 </h3>
-                                <div className='space-y-2'>
+                                <div className='space-y-3'>
                                     <div className='flex justify-between'>
-                                        <span className='text-gray-600'>
+                                        <span className='font-bold uppercase'>
                                             Status:
                                         </span>
                                         <span
-                                            className={`font-medium ${
+                                            className={`font-black uppercase ${
                                                 game.status === 'active'
-                                                    ? 'text-green-600'
+                                                    ? 'text-green'
                                                     : game.status ===
                                                         'completed'
-                                                      ? 'text-blue-600'
-                                                      : 'text-yellow-600'
+                                                      ? 'text-blue'
+                                                      : 'text-orange'
                                             }`}
                                         >
                                             {game.status === 'active'
@@ -464,10 +461,10 @@ export default function GameClient({ gameId }: GameClientProps) {
                                     </div>
 
                                     <div className='flex justify-between'>
-                                        <span className='text-gray-600'>
+                                        <span className='font-bold uppercase'>
                                             Started:
                                         </span>
-                                        <span className='font-medium'>
+                                        <span className='font-black'>
                                             {game.startedAt
                                                 ? new Date(
                                                       game.startedAt,
@@ -478,10 +475,10 @@ export default function GameClient({ gameId }: GameClientProps) {
 
                                     {game.endedAt && (
                                         <div className='flex justify-between'>
-                                            <span className='text-gray-600'>
+                                            <span className='font-bold uppercase'>
                                                 Ended:
                                             </span>
-                                            <span className='font-medium'>
+                                            <span className='font-black'>
                                                 {new Date(
                                                     game.endedAt,
                                                 ).toLocaleString()}
@@ -491,10 +488,10 @@ export default function GameClient({ gameId }: GameClientProps) {
 
                                     {game.winner && (
                                         <div className='flex justify-between'>
-                                            <span className='text-gray-600'>
+                                            <span className='font-bold uppercase'>
                                                 Winner:
                                             </span>
-                                            <span className='font-medium text-blue-600'>
+                                            <span className='font-black text-green'>
                                                 {game.winner === sanityUserId
                                                     ? 'You!'
                                                     : game.winner ===
