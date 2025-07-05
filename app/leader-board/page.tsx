@@ -108,7 +108,7 @@ const GameLeaderboard = () => {
       <div className="relative z-10 max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-6xl md:text-8xl font-black uppercase mb-6">
+          <h1 className="text-4xl md:text-8xl font-black uppercase mb-6">
             <span className='inline-block bg-black text-yellow px-6 py-3 border-8 border-yellow shadow-brutal-xl transform -rotate-2'>
               🏆 LEADERBOARD
             </span>
@@ -178,36 +178,37 @@ const GameLeaderboard = () => {
         </div>
 
         {/* Most Active Players */}
-        <div className="bg-white border-8 border-black p-8 shadow-brutal-xl mb-8">
-          <h2 className="text-4xl font-black uppercase mb-6 flex items-center gap-3 bg-blue text-white px-4 py-2 inline-block shadow-brutal-md">
-            <Gamepad2 className="w-8 h-8" strokeWidth={3} />
+{/* Most Active Players */}
+        <div className="bg-white border-8 border-black p-4 md:p-8 shadow-brutal-xl mb-8">
+          <h2 className="text-2xl md:text-4xl font-black uppercase mb-6 flex items-center gap-3 bg-blue text-white px-4 py-2 shadow-brutal-md">
+            <Gamepad2 className="w-6 h-6 md:w-8 md:h-8" strokeWidth={3} />
             MOST ACTIVE
           </h2>
           <div className="space-y-4">
             {mostActive.map((player, index) => (
               <div
                 key={player.rank}
-                className={`border-6 border-black p-6 shadow-brutal-md hover:shadow-brutal-xl hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-100 ${
+                className={`border-6 border-black p-4 md:p-6 shadow-brutal-md hover:shadow-brutal-xl hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-100 ${
                   index === 0 ? 'bg-purple' : index === 1 ? 'bg-mint' : 'bg-peach'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="text-3xl font-black text-black bg-white border-4 border-black w-16 h-16 flex items-center justify-center shadow-brutal-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <span className="text-2xl md:text-3xl font-black text-black bg-white border-4 border-black w-12 h-12 md:w-16 md:h-16 flex items-center justify-center shadow-brutal-sm shrink-0">
                       {player.rank}
                     </span>
-                    <div>
-                      <h3 className="text-2xl font-black uppercase text-black">{player.name}</h3>
-                      <p className="text-sm font-bold uppercase text-black">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-lg md:text-2xl font-black uppercase text-black break-words">{player.name}</h3>
+                      <p className="text-xs md:text-sm font-bold uppercase text-black break-words">
                         P1: {player.asPlayerOne} TIMES • P2: {player.asPlayerTwo} TIMES
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-5xl font-black text-black">
+                  <div className="flex flex-col items-center sm:items-end text-center sm:text-right">
+                    <span className="text-3xl md:text-5xl font-black text-black">
                       {player.totalGames}
                     </span>
-                    <p className="text-sm font-black uppercase text-black">GAMES</p>
+                    <p className="text-xs md:text-sm font-black uppercase text-black">GAMES</p>
                   </div>
                 </div>
               </div>

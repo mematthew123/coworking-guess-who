@@ -16,8 +16,7 @@ export const browserClient = createClient({
   projectId,
   dataset,
   apiVersion,
-  useCdn: false, // ✅ Critical for real-time
-  withCredentials: true,
+  useCdn: false, 
   perspective: 'published',
 })
 
@@ -27,7 +26,6 @@ export const realtimeClient = createClient({
   dataset,
   apiVersion,
   useCdn: false, // ✅ Never use CDN for real-time
-  withCredentials: true,
   perspective: 'published',
   // Optimize for real-time
   ignoreBrowserTokenWarning: true,
