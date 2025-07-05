@@ -189,97 +189,126 @@ export default function GameInvitationNotifier() {
     // Don't render if no invitations
     if (invitations.length === 0) return null;
 
-    return (
+return (
         <>
             {/* Connection status indicator (debug) */}
             {process.env.NODE_ENV === 'development' && (
                 <div className="fixed top-4 right-4 z-50">
-                    <div className={`text-xs px-2 py-1 rounded ${
-                        connectionStatus === 'connected' ? 'bg-green-100 text-green-800' :
-                        connectionStatus === 'connecting' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
+                    <div className={`text-xs px-2 py-1 font-mono font-bold uppercase ${
+                        connectionStatus === 'connected' ? 'bg-green text-black border-2 border-black' :
+                        connectionStatus === 'connecting' ? 'bg-yellow text-black border-2 border-black' :
+                        'bg-red text-white border-2 border-black'
                     }`}>
                         RT: {connectionStatus}
                     </div>
                 </div>
             )}
 
-            <div className='fixed bottom-4 right-4 z-50 space-y-3'>
-                {invitations.map((invitation) => (
+            <div className='fixed bottom-4 right-4 z-50 space-y-4'>
+                {invitations.map((invitation, index) => (
                     <div
                         key={invitation._id}
-                        className='bg-white rounded-lg shadow-xl p-4 w-80 border-l-4 border-blue-500 animate-slide-in'
+                        className={`bg-white border-6 border-black p-6 w-80 shadow-brutal-xl animate-slide-in transform ${
+                            index % 2 === 0 ? 'rotate-1' : '-rotate-1'
+                        }`}
+                        style={{
+                            animation: 'slideInBrutalist 0.3s ease-out forwards',
+                            animationDelay: `${index * 0.1}s`
+                        }}
                     >
-                        <div className='flex items-center mb-3'>
-                            <div className='w-12 h-12 rounded-full bg-blue-100 flex-shrink-0 mr-3 overflow-hidden'>
+                        {/* Header Banner */}
+                        <div className='bg-pink text-white p-3 -m-6 mb-4 border-b-6 border-black'>
+                            <h3 className='font-black text-xl uppercase text-center'>
+                                🎮 GAME INVITE!
+                            </h3>
+                        </div>
+
+                        <div className='flex items-center mb-4'>
+                            <div className='w-16 h-16 bg-yellow border-4 border-black flex-shrink-0 mr-4 overflow-hidden'>
                                 {invitation.from?.image ? (
                                     <Image
                                         src={urlFor(invitation.from.image)
-                                            .width(48)
-                                            .height(48)
+                                            .width(64)
+                                            .height(64)
                                             .url()}
                                         alt={invitation.from.name || 'Player'}
-                                        width={48}
-                                        height={48}
+                                        width={64}
+                                        height={64}
                                         className='w-full h-full object-cover'
                                     />
                                 ) : (
                                     <div className='w-full h-full flex items-center justify-center'>
-                                        <span className='text-lg font-bold text-blue-500'>
+                                        <span className='text-2xl font-black text-black'>
                                             {invitation.from?.name?.charAt(0) || '?'}
                                         </span>
                                     </div>
                                 )}
                             </div>
                             <div className='flex-1'>
-                                <p className='font-medium text-gray-900'>
+                                <p className='font-black text-xl uppercase text-black'>
                                     {invitation.from?.name}
                                 </p>
-                                <p className='text-xs text-gray-500'>
+                                <p className='text-sm font-bold uppercase text-black bg-orange px-2 py-1 inline-block border-2 border-black mt-1'>
                                     {invitation.from?.profession}
-                                </p>
-                                <p className='text-sm text-blue-600 mt-1'>
-                                    Invites you to play Guess Who!
                                 </p>
                             </div>
                         </div>
 
-                        <div className='flex justify-between'>
+                        <div className='bg-blue text-white p-3 mb-4 border-4 border-black shadow-brutal-sm'>
+                            <p className='font-black text-center uppercase'>
+                                WANTS TO PLAY GUESS WHO!
+                            </p>
+                        </div>
+
+                        <div className='flex gap-3'>
                             <button
                                 onClick={() => handleResponse(invitation._id, false)}
                                 disabled={responding === invitation._id}
-                                className={`px-4 py-2 rounded text-sm transition-colors ${
+                                className={`flex-1 py-3 px-4 font-black uppercase transition-all duration-100 ${
                                     responding === invitation._id
-                                        ? 'bg-gray-200 text-gray-500 cursor-wait'
-                                        : 'border border-gray-300 text-gray-700 hover:bg-gray-100'
+                                        ? 'bg-gray-300 text-gray-500 border-4 border-gray-500 cursor-wait'
+                                        : 'bg-white text-black border-4 border-black shadow-brutal-sm hover:shadow-brutal-md hover:translate-x-[-2px] hover:translate-y-[-2px]'
                                 }`}
                             >
-                                Decline
+                                NAH
                             </button>
                             <button
                                 onClick={() => handleResponse(invitation._id, true)}
                                 disabled={responding === invitation._id}
-                                className={`px-4 py-2 rounded text-sm ${
+                                className={`flex-1 py-3 px-4 font-black uppercase transition-all duration-100 ${
                                     responding === invitation._id
-                                        ? 'bg-blue-300 text-white cursor-wait'
-                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                        ? 'bg-green text-black border-4 border-black cursor-wait animate-pulse'
+                                        : 'bg-green text-black border-4 border-black shadow-brutal-md hover:shadow-brutal-lg hover:translate-x-[-4px] hover:translate-y-[-4px]'
                                 }`}
                             >
-                                {responding === invitation._id ? 'Loading...' : 'Accept & Play'}
+                                {responding === invitation._id ? 'LOADING...' : "LET'S GO!"}
                             </button>
                         </div>
 
-                        <div className='mt-3 text-right'>
-                            <span className='text-xs text-gray-400'>
+                        <div className='mt-4 text-center'>
+                            <span className='text-xs font-mono font-bold uppercase bg-yellow px-2 py-1 border-2 border-black inline-block'>
                                 {invitation.createdAt ? new Date(invitation.createdAt).toLocaleTimeString([], {
                                     hour: '2-digit',
                                     minute: '2-digit',
-                                }) : 'Just now'}
+                                }) : 'JUST NOW'}
                             </span>
                         </div>
                     </div>
                 ))}
             </div>
+
+            <style jsx>{`
+                @keyframes slideInBrutalist {
+                    from {
+                        transform: translateX(400px) rotate(10deg);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0) rotate(var(--rotation, 0deg));
+                        opacity: 1;
+                    }
+                }
+            `}</style>
         </>
     );
 }
