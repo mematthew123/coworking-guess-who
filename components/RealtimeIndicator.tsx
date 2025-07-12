@@ -5,14 +5,16 @@ interface RealtimeIndicatorProps {
   lastUpdated?: string | Date;
   isMyTurn: boolean;
   isRealTimeActive?: boolean;
-  onRefresh?: () => void; // Add callback for refresh
+  onRefresh?: (silent?: boolean) => void; // Add callback for refresh with silent option
+  onManualRefresh?: () => void; // Separate callback for manual refresh
 }
 
 export default function RealtimeIndicator({ 
   lastUpdated, 
   isMyTurn,
   isRealTimeActive = true,
-  onRefresh
+  onRefresh,
+  onManualRefresh
 }: RealtimeIndicatorProps) {
   const [countdown, setCountdown] = useState(30);
   
@@ -20,9 +22,9 @@ export default function RealtimeIndicator({
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          // Schedule refresh after render to avoid setState during render
+          // Schedule silent refresh after render to avoid setState during render
           if (onRefresh) {
-            setTimeout(() => onRefresh(), 0);
+            setTimeout(() => onRefresh(true), 0);
           }
           return 30;
         }
@@ -66,7 +68,10 @@ export default function RealtimeIndicator({
             : 'Attempting to reconnect...'}
         </span>
         <button 
-          onClick={() => onRefresh && onRefresh()}
+          onClick={() => {
+            const refreshFn = onManualRefresh || onRefresh;
+            if (refreshFn) refreshFn();
+          }}
           className="ml-2 text-xs underline text-blue-500"
         >
           Refresh data

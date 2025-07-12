@@ -30,9 +30,11 @@ export default function useGameState(gameId: string) {
     const sanityUserIdRef = useRef<string | null>(null);
     const previousTurnRef = useRef<string | null>(null);
 
-    const fetchGameData = useCallback(async () => {
+    const fetchGameData = useCallback(async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) {
+                setLoading(true);
+            }
 
             // Get the Sanity member ID for the current user
             let sanityUserId = sanityUserIdRef.current;
@@ -133,12 +135,16 @@ export default function useGameState(gameId: string) {
                 setEliminatedIds(eliminated);
             }
 
-            setLoading(false);
+            if (!silent) {
+                setLoading(false);
+            }
             setError(null);
         } catch (err) {
             console.error('Error fetching game data:', err);
             setError('Failed to load game data');
-            setLoading(false);
+            if (!silent) {
+                setLoading(false);
+            }
         }
     }, [user?.id, gameId, questionCategories.length]);
 
@@ -190,13 +196,13 @@ export default function useGameState(gameId: string) {
                                     '[RT] Reconnected to real-time updates',
                                 );
                                 // Refetch data on reconnect to ensure consistency
-                                fetchGameData();
+                                fetchGameData(true); // Silent refresh
                             }
 
                             if (update.type === 'mutation' && update.result) {
                                 console.log('[RT] Game mutation detected');
                                 // Instead of manually updating state, refetch for consistency
-                                fetchGameData();
+                                fetchGameData(true); // Silent refresh
                             }
                         },
                         error: (err) => {
