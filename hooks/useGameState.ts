@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // hooks/useGameState.ts
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useTransition } from 'react';
 import { client, browserClient } from '@/sanity/lib/client';
 import {
     ExpandedGame,
@@ -29,6 +29,8 @@ export default function useGameState(gameId: string) {
     const subscriptionRef = useRef<any>(null);
     const sanityUserIdRef = useRef<string | null>(null);
     const previousTurnRef = useRef<string | null>(null);
+    const lastGameDataRef = useRef<string>('');
+    const [, startTransition] = useTransition();
 
     const fetchGameData = useCallback(async (silent = false) => {
         try {
@@ -80,9 +82,33 @@ export default function useGameState(gameId: string) {
                 return;
             }
 
-            setGame(gameData);
-            setBoardMembers(gameData.boardMembers || []);
-            setLastUpdate(new Date());
+            // Only update state if the game data has actually changed
+            const gameDataString = JSON.stringify({
+                _updatedAt: gameData._updatedAt,
+                status: gameData.status,
+                currentTurn: gameData.currentTurn,
+                moves: gameData.moves?.length,
+                winner: gameData.winner
+            });
+            
+            const hasChanges = gameDataString !== lastGameDataRef.current;
+            
+            if (hasChanges || !silent) {
+                lastGameDataRef.current = gameDataString;
+                
+                // For silent updates, use transition to make them non-blocking
+                if (silent) {
+                    startTransition(() => {
+                        setGame(gameData);
+                        setBoardMembers(gameData.boardMembers || []);
+                        setLastUpdate(new Date());
+                    });
+                } else {
+                    setGame(gameData);
+                    setBoardMembers(gameData.boardMembers || []);
+                    setLastUpdate(new Date());
+                }
+            }
 
             // Check if it's our turn
             const myTurn = sanityUserId === gameData.currentTurn;
@@ -92,11 +118,16 @@ export default function useGameState(gameId: string) {
             if (
                 myTurn &&
                 previousTurnRef.current !== null &&
-                previousTurnRef.current !== sanityUserId
+                previousTurnRef.current !== sanityUserId &&
+                !silent // Don't play sound on silent updates
             ) {
                 playNotificationSound();
             }
-            previousTurnRef.current = gameData.currentTurn ?? null;
+            
+            // Only update turn ref if it changed
+            if (gameData.currentTurn !== previousTurnRef.current) {
+                previousTurnRef.current = gameData.currentTurn ?? null;
+            }
 
             // Fetch question categories if not already loaded
             if (questionCategories.length === 0) {
@@ -132,7 +163,18 @@ export default function useGameState(gameId: string) {
                     `),
                     sanityUserId,
                 );
-                setEliminatedIds(eliminated);
+                // Only update if eliminated list has changed
+                const currentEliminatedStr = eliminatedIds.join(',');
+                const newEliminatedStr = eliminated.join(',');
+                if (currentEliminatedStr !== newEliminatedStr) {
+                    if (silent) {
+                        startTransition(() => {
+                            setEliminatedIds(eliminated);
+                        });
+                    } else {
+                        setEliminatedIds(eliminated);
+                    }
+                }
             }
 
             if (!silent) {
@@ -146,7 +188,7 @@ export default function useGameState(gameId: string) {
                 setLoading(false);
             }
         }
-    }, [user?.id, gameId, questionCategories.length]);
+    }, [user?.id, gameId, questionCategories, eliminatedIds]);
 
     // Set up real-time subscription
     useEffect(() => {
@@ -201,8 +243,14 @@ export default function useGameState(gameId: string) {
 
                             if (update.type === 'mutation' && update.result) {
                                 console.log('[RT] Game mutation detected');
-                                // Instead of manually updating state, refetch for consistency
-                                fetchGameData(true); // Silent refresh
+                                // Check if this is a relevant change before refreshing
+                                const mutation = update as any;
+                                const documentId = mutation.documentId || mutation.result?._id;
+                                
+                                // Only refresh if the mutation is for our game
+                                if (documentId === gameId) {
+                                    fetchGameData(true); // Silent refresh
+                                }
                             }
                         },
                         error: (err) => {
