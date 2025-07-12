@@ -56,6 +56,8 @@ export async function GET() {
     const onlineThreshold = new Date(now.getTime() - ONLINE_THRESHOLD_MINUTES * 60 * 1000);
     const awayThreshold = new Date(now.getTime() - AWAY_THRESHOLD_MINUTES * 60 * 1000);
     
+    console.log('[Presence Cleanup] Running at:', now.toISOString());
+    
     // Get recently inactive users
     const inactiveUsers = await client.fetch(`
       *[_type == "member" && (
@@ -71,6 +73,8 @@ export async function GET() {
       awayThreshold: awayThreshold.toISOString()
     });
     
+    console.log(`[Presence Cleanup] Found ${inactiveUsers.length} inactive users`);
+    
     // Update statuses based on inactivity
     for (const user of inactiveUsers) {
       const lastActive = new Date(user.lastActive);
@@ -84,7 +88,11 @@ export async function GET() {
     
     return NextResponse.json({ 
       updated: inactiveUsers.length,
-      timestamp: now.toISOString()
+      timestamp: now.toISOString(),
+      thresholds: {
+        online: ONLINE_THRESHOLD_MINUTES,
+        away: AWAY_THRESHOLD_MINUTES
+      }
     });
   } catch (error) {
     console.error('Error updating presence statuses:', error);

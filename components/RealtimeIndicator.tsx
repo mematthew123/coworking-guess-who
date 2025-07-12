@@ -20,8 +20,10 @@ export default function RealtimeIndicator({
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          // Trigger refresh callback instead of reloading
-          if (onRefresh) onRefresh();
+          // Schedule refresh after render to avoid setState during render
+          if (onRefresh) {
+            setTimeout(() => onRefresh(), 0);
+          }
           return 30;
         }
         return prev - 1;

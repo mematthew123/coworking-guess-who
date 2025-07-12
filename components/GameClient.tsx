@@ -153,9 +153,9 @@ export default function GameClient({ gameId }: GameClientProps) {
             setIsSubmitting(true);
 
             try {
-                const isCorrect = await makeGuess(memberId);
+                const result = await makeGuess(memberId);
 
-                if (isCorrect) {
+                if (result.correct) {
                     alert('Congratulations! You guessed correctly!');
                 } else {
                     alert("Sorry, that's not the right person!");

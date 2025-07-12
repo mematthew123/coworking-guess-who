@@ -49,7 +49,7 @@ export default defineType({
       title: 'Player One Target',
       type: 'reference',
       to: [{ type: 'member' }],
-      description: 'The member that Player Two is trying to guess',
+      description: 'The member that Player One is trying to guess (Player Two\'s character)',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
@@ -57,7 +57,7 @@ export default defineType({
       title: 'Player Two Target',
       type: 'reference',
       to: [{ type: 'member' }],
-      description: 'The member that Player One is trying to guess',
+      description: 'The member that Player Two is trying to guess (Player One\'s character)',
       validation: (Rule) => Rule.required(),
     }),
     defineField({

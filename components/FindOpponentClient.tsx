@@ -1,103 +1,28 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
 import Image from 'next/image';
 import { urlFor } from '@/sanity/lib/image';
-import { client } from '@/sanity/lib/client';
+import { usePresence } from '@/hooks/usePresence';
 
 export default function FindOpponentClient() {
   const router = useRouter();
-  const { user, isLoaded } = useUser();
-  const [, setSanityUserId] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [onlineMembers, setOnlineMembers] = useState<any[]>([]);
+  const { onlineMembers, loading, error: presenceError } = usePresence();
   const [selectedOpponentId, setSelectedOpponentId] = useState<string>('');
   const [inviting, setInviting] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Update the current user's presence
-  const updateUserPresence = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      await fetch('/api/presence/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-    } catch (error) {
-      console.error('Error updating presence:', error);
-    }
-  }, [user]);
-
-  // Fetch user ID and online members
-  useEffect(() => {
-    async function fetchData() {
-      if (!isLoaded || !user) return;
-      
-      try {
-        setLoading(true);
-        
-        // Get the Sanity member ID for the current Clerk user
-        const memberDoc = await client.fetch(
-          `*[_type == "member" && clerkId == $clerkId][0]`,
-          { clerkId: user.id }
-        );
-        
-        if (memberDoc) {
-          setSanityUserId(memberDoc._id);
-          
-          // Fetch members who are online or recently active
-          const coworkingMembers = await client.fetch(`
-            *[_type == "member" && 
-              gameParticipation == true && 
-              _id != $currentUserId &&
-              (onlineStatus == "online" || onlineStatus == "away")
-            ] {
-              _id,
-              name,
-              profession,
-              image,
-              onlineStatus,
-              lastActive
-            } | order(onlineStatus asc, lastActive desc)
-          `, { currentUserId: memberDoc._id });
-          
-          setOnlineMembers(coworkingMembers || []);
-        } else {
-          // No profile found
-          setError('You need to complete your profile before creating a game');
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setLoading(false);
-        setError('Failed to load members');
-      }
-    }
-    
-    fetchData();
-    
-    // Update presence for the current user
-    updateUserPresence();
-    const interval = setInterval(updateUserPresence, 60000); // Every minute
-    
-    return () => clearInterval(interval);
-  }, [isLoaded, updateUserPresence, user]);
+  const [inviteError, setInviteError] = useState<string | null>(null);
   
   // Invite another player
   async function invitePlayer() {
     if (!selectedOpponentId) {
-      setError('Please select an opponent');
+      setInviteError('Please select an opponent');
       return;
     }
     
     try {
       setInviting(true);
-      setError(null);
+      setInviteError(null);
       
       const response = await fetch('/api/games/invite', {
         method: 'POST',
@@ -116,7 +41,7 @@ export default function FindOpponentClient() {
       router.push(`/games/waiting/${invitation._id}`);
     } catch (error) {
       console.error('Error inviting player:', error);
-      setError(error instanceof Error ? error.message : 'Failed to send invitation');
+      setInviteError(error instanceof Error ? error.message : 'Failed to send invitation');
       setInviting(false);
     }
   }
@@ -152,11 +77,11 @@ export default function FindOpponentClient() {
   }
   
   // Error state
-  if (error && !onlineMembers.length) {
+  if (presenceError) {
     return (
       <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-        <p className="text-red-700">{error}</p>
-        {error === 'You need to complete your profile before creating a game' && (
+        <p className="text-red-700">{presenceError}</p>
+        {presenceError === 'User profile not found' && (
           <button 
             onClick={() => router.push('/onboarding')}
             className="mt-2 text-sm text-red-700 underline"
@@ -192,9 +117,9 @@ export default function FindOpponentClient() {
         You&#39;ll both choose your own characters to play as!
       </p>
       
-      {error && (
+      {inviteError && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
-          <p className="text-red-700">{error}</p>
+          <p className="text-red-700">{inviteError}</p>
         </div>
       )}
       

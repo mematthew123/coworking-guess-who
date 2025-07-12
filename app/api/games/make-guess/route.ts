@@ -55,12 +55,14 @@ export async function POST(request: Request) {
       return new NextResponse(JSON.stringify({ error: 'Not your turn' }), { status: 403 });
     }
     
-    // Determine the target
+    // Determine the target - the logic was backwards!
+    // playerOneTarget is what Player One is trying to guess (Player Two's character)
+    // playerTwoTarget is what Player Two is trying to guess (Player One's character)
     const playerOneId = game.playerOne._id;
     const playerTwoId = game.playerTwo._id;
     const targetMemberId = sanityUserId === playerOneId
-      ? game.playerTwoTarget._id
-      : game.playerOneTarget._id;
+      ? game.playerOneTarget._id  // Player 1 is trying to guess playerOneTarget
+      : game.playerTwoTarget._id;  // Player 2 is trying to guess playerTwoTarget
     
     const isCorrect = memberId === targetMemberId;
     
