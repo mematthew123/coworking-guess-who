@@ -391,6 +391,9 @@ export default function GameClient({ gameId }: GameClientProps) {
                                 eliminatedIds={eliminatedIds}
                                 onToggleMember={handleToggleMember}
                                 readonly={!isMyTurn || (isMyTurn && !guessMode)}
+                                moves={game.moves || []}
+                                categories={questionCategories}
+                                currentPlayerId={sanityUserId || ''}
                             />
                         </div>
                     </div>

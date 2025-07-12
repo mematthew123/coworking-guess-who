@@ -1,132 +1,69 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { urlFor } from '@/sanity/lib/image';
 import { ExpandedMember } from '@/types/groqResults';
-import { gsap } from 'gsap';
+import { BoardViewMode } from '@/types/questionHistory';
+import { useQuestionHistory } from '@/hooks/useQuestionHistory';
+import CharacterCardOverlay from './CharacterCardOverlay';
+import CharacterDetailPopover from './CharacterDetailPopover';
+import BoardViewModeSelector from './BoardViewModeSelector';
 
 interface GameBoardProps {
   members: ExpandedMember[];
   eliminatedIds: string[];
   onToggleMember: (id: string) => void;
   readonly?: boolean;
+  moves?: any[];
+  categories?: any[];
+  currentPlayerId?: string;
 }
 
 export default function GameBoard({ 
   members, 
   eliminatedIds, 
   onToggleMember,
-  readonly = false 
+  readonly = false,
+  moves = [],
+  categories = [],
+  currentPlayerId = ''
 }: GameBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [viewMode, setViewMode] = useState<BoardViewMode>(BoardViewMode.Normal);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [hoveredMemberId, setHoveredMemberId] = useState<string | null>(null);
+  const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
+  
+  // Use question history hook
+  const { memberHistories, getMemberVisualState } = useQuestionHistory(
+    members,
+    moves,
+    categories,
+    currentPlayerId
+  );
+  
+  // No animations - instant updates only
 
-  // Initial animation when board loads
-  useEffect(() => {
-    if (!boardRef.current || typeof window === 'undefined') return;
-
-    // Harsh card entrance
-    gsap.fromTo(
-      cardRefs.current.filter(Boolean),
-      {
-        opacity: 0,
-        scale: 0,
-        rotate: () => Math.random() * 30 - 15,
-      },
-      {
-        opacity: 1,
-        scale: 1,
-        rotate: () => Math.random() * 6 - 3,
-        duration: 0.2,
-        stagger: {
-          each: 0.03,
-          from: "random",
-        },
-        ease: "none",
-      }
-    );
-  }, [members]);
-
-  // Animate elimination state changes
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  const handleCardClick = (memberId: string, event: React.MouseEvent<HTMLDivElement>) => {
+    if (readonly && viewMode === BoardViewMode.Normal) return;
     
-    cardRefs.current.forEach((card, index) => {
-      if (!card) return;
-      
-      const member = members[index];
-      const isEliminated = eliminatedIds.includes(member._id);
-      const crossRefs = card.querySelectorAll('.elimination-cross');
-      
-      if (isEliminated) {
-        // Harsh elimination effect
-        gsap.to(card, {
-          scale: 0.9,
-          rotate: 0,
-          duration: 0.1,
-          ease: "none",
-        });
-        
-        // Slam the cross on
-        gsap.fromTo(
-          crossRefs,
-          {
-            scale: 0,
-          },
-          {
-            scale: 1,
-            duration: 0.1,
-            ease: "none",
-          }
-        );
-      } else {
-        // Snap back to normal
-        gsap.to(card, {
-          scale: 1,
-          duration: 0.1,
-          ease: "none",
-        });
-        
-        // Hide the cross instantly
-        gsap.set(crossRefs, {
-          scale: 0,
-        });
-      }
-    });
-  }, [eliminatedIds, members]);
+    // If in history view modes, show popover instead
+    if (viewMode !== BoardViewMode.Normal) {
+      setSelectedMemberId(memberId);
+      setPopoverAnchor(event.currentTarget);
+      return;
+    }
 
-  const handleCardClick = (memberId: string, index: number) => {
-    if (readonly) return;
-    
-    const card = cardRefs.current[index];
-    if (!card) return;
-
-    // Harsh click feedback
-    gsap.to(card, {
-      scale: 0.85,
-      duration: 0.05,
-      yoyo: true,
-      repeat: 1,
-      ease: "none",
-      onComplete: () => {
-        onToggleMember(memberId);
-      }
-    });
+    // Instant toggle
+    onToggleMember(memberId);
   };
 
-  const handleCardHover = (index: number, isHovering: boolean) => {
-    if (readonly) return;
-    
-    const card = cardRefs.current[index];
-    if (!card) return;
-
-    gsap.to(card, {
-      x: isHovering ? -4 : 0,
-      y: isHovering ? -4 : 0,
-      duration: 0.1,
-      ease: "none",
-    });
+  const handleCardHover = (memberId: string, isHovering: boolean) => {
+    if (readonly && viewMode === BoardViewMode.Normal) return;
+    setHoveredMemberId(isHovering ? memberId : null);
   };
 
   const getCardColor = (index: number) => {
@@ -135,26 +72,37 @@ export default function GameBoard({
   };
 
   return (
-    <div 
-      ref={boardRef}
-      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 p-6 bg-cream"
-    >
+    <div>
+      {/* View Mode Selector with fade animation */}
+      <div className="mb-4 px-6 transition-all duration-300 ease-in-out">
+        <BoardViewModeSelector
+          currentMode={viewMode}
+          onModeChange={setViewMode}
+          disabled={false}
+        />
+      </div>
+      
+      {/* Game Board Grid */}
+      <div 
+        ref={boardRef}
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 p-6 bg-cream"
+      >
       {members.map((member, index) => (
         <div
           key={member._id}
           ref={(el) => { cardRefs.current[index] = el; }}
-          onClick={() => handleCardClick(member._id, index)}
-          onMouseEnter={() => handleCardHover(index, true)}
-          onMouseLeave={() => handleCardHover(index, false)}
+          onClick={(e) => handleCardClick(member._id, e)}
+          onMouseEnter={() => handleCardHover(member._id, true)}
+          onMouseLeave={() => handleCardHover(member._id, false)}
           className={`
             relative bg-white border-6 border-black
-            transition-all transform-gpu
+            transition-all transform-gpu will-change-transform
             ${readonly ? '' : 'cursor-pointer hover:shadow-brutal-xl'}
             ${eliminatedIds.includes(member._id) ? 'eliminated-card' : ''}
             shadow-brutal-md
           `}
           style={{
-            transform: `rotate(${Math.random() * 6 - 3}deg)`,
+            transform: `rotate(${Math.random() * 6 - 3}deg)`
           }}
         >
           {/* Member image container */}
@@ -196,9 +144,20 @@ export default function GameBoard({
             </p>
           </div>
           
-          {/* Elimination cross overlay */}
-          {eliminatedIds.includes(member._id) && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {/* Question History Overlay with animation class */}
+          {viewMode !== BoardViewMode.Normal && memberHistories.get(member._id) && (
+            <div className="question-overlay">
+              <CharacterCardOverlay
+                history={memberHistories.get(member._id)!}
+                visualState={getMemberVisualState(member._id)!}
+                showDetails={hoveredMemberId === member._id}
+              />
+            </div>
+          )}
+          
+          {/* Elimination cross overlay - only in normal mode */}
+          {viewMode === BoardViewMode.Normal && eliminatedIds.includes(member._id) && (
+            <div className="elimination-overlay absolute inset-0 flex items-center justify-center pointer-events-none">
               <div 
                 className="elimination-cross absolute w-full h-2 bg-red border-2 border-black"
                 style={{ transform: 'rotate(45deg)' }}
@@ -220,6 +179,21 @@ export default function GameBoard({
           )}
         </div>
       ))}
+      </div>
+      
+      {/* Character Detail Popover */}
+      {selectedMemberId && popoverAnchor && (
+        <CharacterDetailPopover
+          member={members.find(m => m._id === selectedMemberId)!}
+          history={memberHistories.get(selectedMemberId)!}
+          isOpen={true}
+          onClose={() => {
+            setSelectedMemberId(null);
+            setPopoverAnchor(null);
+          }}
+          anchorEl={popoverAnchor}
+        />
+      )}
     </div>
   );
 }
