@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   EditorProvider,
   PortableTextBlock,
@@ -21,8 +21,8 @@ import {
   Maximize2
 } from "lucide-react";
 
-// Import Sanity client for real-time subscription
-import { client } from '@/sanity/lib/client';
+// Import hook for real-time subscription
+import { useLiveContentSubscription } from '@/hooks/useLiveContentSubscription';
 
 // Define the schema for game chat
 const gameChatSchema = defineSchema({
@@ -236,6 +236,71 @@ const GameChat: React.FC<GameChatProps> = ({
     loadChatMessages();
   }, [gameId, currentUserName, opponentName, initialLoad]);
 
+  // Callback for handling chat updates
+  const handleChatUpdate = useCallback((data: {
+    _id: string;
+    chat?: Array<{
+      _key: string;
+      senderId: string;
+      senderName: string;
+      message: PortableTextBlock[];
+      timestamp: string;
+    }>;
+  }) => {
+    if (data && data.chat && data.chat.length > 0) {
+      // Convert all messages to our format
+      const formattedMessages: ChatMessage[] = data.chat.map((msg) => ({
+        id: msg._key || Date.now().toString(),
+        userId: msg.senderId,
+        userName: msg.senderName,
+        content: msg.message,
+        timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }));
+
+      // Update messages and handle unread count
+      setMessages(prev => {
+        const prevIds = new Set(prev.map(m => m.id));
+        const newMessages = formattedMessages.filter(m => !prevIds.has(m.id));
+        
+        // Show notification for new messages from other users
+        if (newMessages.length > 0 && !isOpen) {
+          const otherUserMessages = newMessages.filter(m => m.userId !== currentUserId);
+          if (otherUserMessages.length > 0) {
+            setUnreadCount(count => count + otherUserMessages.length);
+          }
+        }
+
+        return formattedMessages;
+      });
+    }
+  }, [isOpen, currentUserId]);
+
+  // Use Live Content subscription for real-time chat updates
+  useLiveContentSubscription<{
+    _id: string;
+    chat?: Array<{
+      _key: string;
+      senderId: string;
+      senderName: string;
+      message: PortableTextBlock[];
+      timestamp: string;
+    }>;
+  }>({
+    query: `*[_type == "game" && _id == $gameId][0]{
+      _id,
+      chat[] {
+        _key,
+        senderId,
+        senderName,
+        message,
+        timestamp
+      }
+    }`,
+    params: { gameId },
+    enabled: !initialLoad && !!gameId,
+    onUpdate: handleChatUpdate
+  });
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -246,52 +311,6 @@ const GameChat: React.FC<GameChatProps> = ({
       setUnreadCount(0);
     }
   }, [messages, isOpen]);
-
-  // Set up real-time subscription for chat messages
-  useEffect(() => {
-    if (!gameId || initialLoad) return;
-
-    const query = `*[_type == "game" && _id == $gameId]`;
-    const params = { gameId };
-
-    const subscription = client.listen(query, params).subscribe((update) => {
-      if (update.type === 'mutation' && update.result) {
-        const game = update.result as any;
-        
-        if (game.chat && game.chat.length > 0) {
-          // Get the latest message
-          const latestMessage = game.chat[game.chat.length - 1];
-          
-          // Check if this message already exists in our state
-          setMessages(prev => {
-            const messageExists = prev.some(msg => msg.id === latestMessage._key);
-            if (!messageExists && latestMessage.senderId !== currentUserId) {
-              // Only add if it's a new message from the other player
-              const newMessage: ChatMessage = {
-                id: latestMessage._key,
-                userId: latestMessage.senderId,
-                userName: latestMessage.senderName,
-                content: latestMessage.message,
-                timestamp: new Date(latestMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-              };
-              
-              // Show notification for new message
-              if (!isOpen) {
-                setUnreadCount(count => count + 1);
-              }
-              
-              return [...prev, newMessage];
-            }
-            return prev;
-          });
-        }
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [gameId, currentUserId, isOpen, initialLoad]);
 
   const handleSend = async () => {
     if (
@@ -360,7 +379,7 @@ const GameChat: React.FC<GameChatProps> = ({
     );
 
   // Add game event messages
-  const addGameEvent = (type: 'question' | 'answer' | 'guess' | 'elimination', details: string) => {
+  const addGameEvent = useCallback((type: 'question' | 'answer' | 'guess' | 'elimination', details: string) => {
     const eventMessage: ChatMessage = {
       id: Date.now().toString(),
       userId: 'system',
@@ -378,7 +397,7 @@ const GameChat: React.FC<GameChatProps> = ({
     if (!isOpen) {
       setUnreadCount(prev => prev + 1);
     }
-  };
+  }, [isOpen]);
 
   // Expose game event method
   useEffect(() => {
@@ -386,7 +405,7 @@ const GameChat: React.FC<GameChatProps> = ({
     return () => {
       delete (window as any).gameChatAddEvent;
     };
-  }, []);
+  }, [addGameEvent]);
 
   if (!isOpen) {
     return (
