@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "abandon-games": "node scripts/abandon-all-games.js",
+    "abandon-games-batch": "node scripts/abandon-all-games-batch.js",
+    "validate-questions": "tsx scripts/validateQuestions.ts",
+    "fix-questions": "tsx scripts/fixQuestionPaths.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.2",
@@ -27,6 +31,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/dotenv": "^6.1.1",
     "@types/next-auth": "^3.13.0",
     "@types/node": "^20",
     "@types/react": "^19",

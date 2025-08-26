@@ -62,17 +62,27 @@ const MemberDirectory = () => {
     // Filter members based on search and filters
     const filteredMembers = useMemo(() => {
         return members.filter((member) => {
-            // Text search
+            // Text search - split search term into words and match ANY word
+            const searchWords = searchTerm
+                .trim()
+                .toLowerCase()
+                .split(/\s+/)
+                .filter(Boolean);
+
             const matchesSearch =
-                !searchTerm ||
-                member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                member.profession
-                    ?.toLowerCase()
-                    .includes(searchTerm.toLowerCase()) ||
-                member.company
-                    ?.toLowerCase()
-                    .includes(searchTerm.toLowerCase()) ||
-                member.bio?.toLowerCase().includes(searchTerm.toLowerCase());
+                searchWords.length === 0 ||
+                searchWords.some((word) => {
+                    // Check if the word matches ANY field
+                    return (
+                        member.name?.toLowerCase().includes(word) ||
+                        member.profession?.toLowerCase().includes(word) ||
+                        member.company?.toLowerCase().includes(word) ||
+                        member.bio?.toLowerCase().includes(word) ||
+                        member.skills?.some((skill) =>
+                            skill.toLowerCase().includes(word),
+                        )
+                    );
+                });
 
             // Profession filter
             const matchesProfession =

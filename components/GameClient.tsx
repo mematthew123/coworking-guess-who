@@ -25,6 +25,7 @@ export default function GameClient({ gameId }: GameClientProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
     const previousTurnRef = useRef<string | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     // Step 1: Get the Sanity user ID that corresponds to the Clerk ID
     useEffect(() => {
@@ -65,6 +66,7 @@ export default function GameClient({ gameId }: GameClientProps) {
         askQuestion,
         makeGuess,
         fetchGameData,
+        connectionStatus,
     } = useGameState(gameId);
 
     const handleAbandonGame = async () => {
@@ -153,9 +155,9 @@ export default function GameClient({ gameId }: GameClientProps) {
             setIsSubmitting(true);
 
             try {
-                const isCorrect = await makeGuess(memberId);
+                const result = await makeGuess(memberId);
 
-                if (isCorrect) {
+                if (result.correct) {
                     alert('Congratulations! You guessed correctly!');
                 } else {
                     alert("Sorry, that's not the right person!");
@@ -306,8 +308,23 @@ export default function GameClient({ gameId }: GameClientProps) {
                     <RealtimeIndicator
                         lastUpdated={lastUpdate || game._updatedAt}
                         isMyTurn={isMyTurn}
-                        isRealTimeActive={true} // Always true with SanityLive
-                        onRefresh={fetchGameData}
+                        isRealTimeActive={connectionStatus === 'connected'}
+                        onRefresh={async (silent) => {
+                            if (!silent) {
+                                setIsRefreshing(true);
+                            }
+                            await fetchGameData(silent);
+                            if (!silent) {
+                                setIsRefreshing(false);
+                            }
+                            setLastUpdate(new Date());
+                        }}
+                        onManualRefresh={async () => {
+                            setIsRefreshing(true);
+                            await fetchGameData();
+                            setIsRefreshing(false);
+                            setLastUpdate(new Date());
+                        }}
                     />
 
                     {/* New Turn Indicator */}
@@ -319,9 +336,27 @@ export default function GameClient({ gameId }: GameClientProps) {
                     <div className='lg:col-span-2'>
                         <div className='bg-white p-4 rounded-lg shadow-md mb-4'>
                             <div className='flex justify-between items-center mb-4'>
-                                <h2 className='text-xl font-semibold'>
-                                    Game Board
-                                </h2>
+                                <div className='flex items-center gap-3'>
+                                    <h2 className='text-xl font-semibold'>
+                                        Game Board
+                                    </h2>
+                                    <button
+                                        onClick={async () => {
+                                            setIsRefreshing(true);
+                                            await fetchGameData();
+                                            setIsRefreshing(false);
+                                            setLastUpdate(new Date());
+                                        }}
+                                        disabled={isRefreshing}
+                                        className={`px-3 py-1 text-sm border border-gray-300 rounded transition-all ${
+                                            isRefreshing
+                                                ? 'bg-gray-100 cursor-not-allowed'
+                                                : 'bg-white hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {isRefreshing ? '↻ Refreshing...' : '↻ Refresh'}
+                                    </button>
+                                </div>
 
                                 {isMyTurn && (
                                     <button
@@ -356,6 +391,9 @@ export default function GameClient({ gameId }: GameClientProps) {
                                 eliminatedIds={eliminatedIds}
                                 onToggleMember={handleToggleMember}
                                 readonly={!isMyTurn || (isMyTurn && !guessMode)}
+                                moves={game.moves || []}
+                                categories={questionCategories}
+                                currentPlayerId={sanityUserId || ''}
                             />
                         </div>
                     </div>

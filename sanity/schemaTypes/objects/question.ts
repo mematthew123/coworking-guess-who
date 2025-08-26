@@ -31,10 +31,12 @@ export default defineType({
       type: 'string',
       options: {
         list: [
-          { title: 'Professional', value: 'professional' },
-          { title: 'Personal', value: 'personal' },
-          { title: 'Workspace', value: 'workspace' },
-          { title: 'Skills', value: 'skills' },
+          { title: 'Professional Background', value: 'professional' },
+          { title: 'Technical Skills', value: 'technical' },
+          { title: 'Personal Traits', value: 'personal' },
+          { title: 'Work Style', value: 'workstyle' },
+          { title: 'Hobbies & Interests', value: 'hobbies' },
+          { title: 'Experience & Background', value: 'experience' }
         ],
       },
       validation: (Rule) => Rule.required(),
