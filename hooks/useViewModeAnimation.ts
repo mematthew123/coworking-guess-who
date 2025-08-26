@@ -96,18 +96,20 @@ export function useViewModeAnimation(
           onComplete: () => {
             // Trigger overlay animations
             cards.forEach((card, index) => {
-              const overlay = card.querySelector('.question-overlay');
-              if (overlay) {
-                gsap.fromTo(overlay, 
-                  { opacity: 0, scale: 0.5 },
-                  { 
-                    opacity: 1, 
-                    scale: 1, 
-                    duration: 0.3,
-                    delay: index * 0.02,
-                    ease: "back.out(1.7)"
-                  }
-                );
+              if (card) {
+                const overlay = card.querySelector('.question-overlay');
+                if (overlay) {
+                  gsap.fromTo(overlay, 
+                    { opacity: 0, scale: 0.5 },
+                    { 
+                      opacity: 1, 
+                      scale: 1, 
+                      duration: 0.3,
+                      delay: index * 0.02,
+                      ease: "back.out(1.7)"
+                    }
+                  );
+                }
               }
             });
           }
@@ -241,6 +243,7 @@ export function useViewModeAnimation(
       case BoardViewMode.EliminationPath:
         // Fade in overlays with bounce
         cards.forEach((card, index) => {
+          if (!card) return;
           const overlays = card.querySelectorAll('.question-overlay, .elimination-overlay');
           if (overlays.length > 0) {
             overlayTl.fromTo(overlays,
