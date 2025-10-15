@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import './globals.css';
+import '../globals.css';
 import Navigation from '@/components/Navigation';
 import { ClerkProvider } from '@clerk/nextjs';
 import { SanityLive } from '@/sanity/lib/live';
